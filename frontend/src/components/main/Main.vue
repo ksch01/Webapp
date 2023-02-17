@@ -46,13 +46,22 @@ function updated(updatedUser){
 }
 
 function updatedOther(updatedUser){
-    let user = data.value.find(user => user.email === updatedUser.email)
+    let user = data.value.find(user => user.email === updatedUser.initialEmail)
     user.email = updatedUser.email
     user.name = updatedUser.name
     user.zip = updatedUser.zip
     user.place = updatedUser.place
     user.phone = updatedUser.phone
     user.privileges = updatedUser.privileges
+}
+
+function deleted(deletedUserEmail){
+    for(let i = 0; i < data.value.length; i++){
+        if(data.value[i].email === deletedUserEmail){
+            data.value.splice(i,i)
+            return
+        }
+    }
 }
 
 function sort(compare){
@@ -93,7 +102,7 @@ function getSelectorClass(screen){
     <div class='section-content'>
         <div class='content welcome' v-if='contentScreen === SCREEN_WELCOME'>Willkommen {{ user.name }}!</div>
         <Userdata v-else-if='contentScreen === SCREEN_MYDATA' :user='user' :privileges='user.privileges' @updated="updated"/>
-        <Userlist v-else-if='contentScreen === SCREEN_LISTPERSONS' :data='data' :email='user.email' :id='user.id' :privileges='user.privileges' @selectedself="setScreen(SCREEN_MYDATA)" @sort="sort" @reverse="reverse" @updated="updatedOther"/>
+        <Userlist v-else-if='contentScreen === SCREEN_LISTPERSONS' :data='data' :email='user.email' :id='user.id' :privileges='user.privileges' @selectedself="setScreen(SCREEN_MYDATA)" @sort="sort" @reverse="reverse" @updated="updatedOther" @deleted="deleted"/>
         <Usersearch v-else-if='contentScreen === SCREEN_SEARCH'/>
     </div>
 </template>

@@ -91,9 +91,12 @@ function checkPassword(){password.value.check()}
         <div class='content form'>
             <Input label='E-mail' :invalid='!email.isValid' v-model='email.value' :type='getType()' @focusout='checkEmail'/>
             <Input label='Password' :invalid='!password.isValid' v-model='password.value' :type='getType("password")' @focusout='checkPassword'/>
-            <div v-if='ERR.getError() !== false' class='input-message'>{{ ERR.getError() }}</div>
+            
+            <div v-if='ERR.isError()' class='input-message'>{{ ERR.getError() }}</div>
+            
             <button v-if='!isLoading' class='form-button' @focusin="tryLogin">Login</button>
             <div v-else class='loader'></div>
+            
             <div>
                 Noch kein Konto? Zum regestrieren <a @click='$emit("signup")'>hier</a> klicken.
             </div>

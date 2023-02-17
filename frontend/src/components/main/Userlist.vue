@@ -5,7 +5,7 @@ import Table from '../Table.vue'
 import Navigator from '../Navigator.vue'
 
 const props = defineProps(["data", "email", "id", "privileges"])
-const emit = defineEmits(["selectedself", "sort", "reverse", "updated"])
+const emit = defineEmits(["selectedself", "sort", "reverse", "updated", "deleted"])
 
 const SCREEN_LIST = 0;
 const SCREEN_USER = 1;
@@ -109,6 +109,14 @@ function select(arg){
     }
 }
 
+function updated(updatedUser){
+    emit('updated', updatedUser)
+}
+
+function deleted(deletedUserEmail){
+    emit('deleted', deletedUserEmail)
+}
+
 function setScreen(newScreen){
     screen.value = newScreen
 }
@@ -119,5 +127,5 @@ function setScreen(newScreen){
         <Table :rows="displayed" :exclude="['privileges']" :sortAttribute='sortAttribute' :sortDirection='sortDirection' @sort="sort" @select="select"/>
         <Navigator :current="page" :max="max" @navigate="setPage"/>
     </div>
-    <Userdata v-else-if="screen === SCREEN_USER" :user="selectedUser" :invoker="props.id" :privileges="props.privileges" mode="observe" @updated="$emit('updated')" @returned="setScreen(SCREEN_LIST)"/>
+    <Userdata v-else-if="screen === SCREEN_USER" :user="selectedUser" :invoker="props.id" :privileges="props.privileges" mode="observe" @updated="updated" @deleted="deleted" @returned="setScreen(SCREEN_LIST)"/>
 </template>

@@ -8,7 +8,7 @@
     import * as validate from '../util/InputValidator.js'
 
     const props = defineProps(["user", "mode", "privileges", "invoker"])
-    const emit = defineEmits(["updated", "signedup", "returned"])
+    const emit = defineEmits(["updated", "deleted", "signedup", "returned"])
 
     const MODE_OBSERVE = 0
     const MODE_STRING_OBSERVE = "observe"
@@ -63,6 +63,8 @@
 
     const isLoading = ref(false)
     const isEraseCheck = ref(false)
+    const isErasing = ref(false)
+    const isErased = ref(false)
 
     onBeforeMount(() => {
         if(props.user !== undefined){
@@ -146,9 +148,7 @@
         }
 
         isLoading.value = true
-        requestErrorConflict.value = false
-        requestErrorServer.value = false
-        requestErrorUnreachable.value = false
+        resetErrors()
 
         axios({
             method: mode.value === MODE_SIGNUP ? 'post' : 'put',
@@ -162,6 +162,7 @@
 
         if(mode.value === MODE_EDIT_OWN || mode.value === MODE_EDIT_OTHER){
             emit("updated", {
+                initialEmail: props.user.email,
                 email: email.value.value,
                 name: name.value.value,
                 zip: zip.value.value,
@@ -178,6 +179,9 @@
     function handlePutError(error){
         isLoading.value = false
 
+        handleError(error)
+    }
+    function handleError(error){
         if(error.response != undefined){
             if(error.response.status === 409)
                 requestErrorConflict.value = true
@@ -187,6 +191,12 @@
         }else{
             requestErrorUnreachable.value = true
         }
+    }
+
+    function resetErrors(){
+        requestErrorConflict.value = false
+        requestErrorServer.value = false
+        requestErrorUnreachable.value = false
     }
 
     function checkErase(){
@@ -201,8 +211,10 @@
         const params = new URLSearchParams()
         params.append('email', props.user.email)
 
-        isEraseCheck.value = false;
-        isLoading.value = true;
+        isEraseCheck.value = false
+        isErasing.value = true
+
+        resetErrors()
 
         axios({
             method: 'delete',
@@ -212,10 +224,15 @@
             .catch(handleDeleteError)
     }
     function handleDeleteResponse(response){
-        isLoading.value = false
+        isErasing.value = false
+        isErased.value = true
+
+        emit("deleted", props.user.email)
     }
     function handleDeleteError(error){
-        isLoading.value = false
+        isErasing.value = false
+
+        handleError(error)
     }
 
     function edit(){
@@ -264,7 +281,12 @@
 </script>
 
 <template>
-    <div v-if="!isEraseCheck" class='content form'>
+    <PermissionCheck v-if="isEraseCheck || isErasing" :progressing="isErasing" @cancel="cancelErase" @accept="erase">Wollen Sie den gewählten Datensatz wirklich löschen?</PermissionCheck>
+    <div v-else-if="isErased" class="content">
+        Der Datensatz wurde erfolgreich gelöscht.
+        <button class='form-button' @click="$emit('returned')">&#60</button>
+    </div>
+    <div v-else class='content form'>
         <div v-if='mode <= MODE_EDIT_OTHER' class='userdata-heading'>
             <h1>{{ (mode === MODE_OBSERVE || mode === MODE_EDIT_OTHER) ? name.value : "My Data"}}</h1>
             <template v-if='mode <= MODE_READ'>
@@ -293,15 +315,17 @@
             <Input class='password' label='Passwort' :invalid='!password.isValid' v-model='password.value' :type='getType("password")' @focusout='checkPassword'/>
             <Input label='Wiederholen' :invalid='!passwordR.isValid' v-model='passwordR.value' :type='getType("password")' @focusout='checkPasswordR'/>
         </template>
-        <div v-else-if='mode == MODE_OBSERVE' class='button-row'>
-                <button class='edit' @click="$emit('returned')">&#60</button>
-        </div>
+
         <div v-if='mode === MODE_SIGNUP' class='consent'>
             <input type='checkbox' v-model='consent'/>
             Ich stimme den <strong>Nutzungsbedingungen</strong> zu und habe die <strong>Datenschutzerklärung</strong> gelesen.
         </div>
-        <div v-if='ERR.getError() !== false' class='input-message'>{{ ERR.getError() }}</div>
-        <template v-if='!isLoading'>
+        
+        <div v-if='mode >= MODE_READ && ERR.isError()' class='input-message'>{{ ERR.getError() }}</div>
+        
+        <button v-if='mode === MODE_OBSERVE' class='form-button' @click="$emit('returned')">&#60</button>
+
+        <template v-else-if='!isLoading'>
             <button v-if='mode === MODE_SIGNUP' class='form-button' @click='signup'>Registrieren</button>
             <div v-else-if='mode >= MODE_EDIT_OWN' class='button-row'>
                 <button v-if='mode == MODE_EDIT_OTHER' class='form-button' @click="$emit('returned')">&#60</button>
@@ -309,7 +333,8 @@
                 <button v-if='mode == MODE_EDIT_OTHER && props.privileges >= PRIVILEGES_ADMIN' class='form-button delete' @click='checkErase'>Löschen</button>
             </div>
         </template>
+
         <div v-else class='loader'></div>
     </div>
-    <PermissionCheck v-else="isEraseCheck" @cancel="cancelErase" @accept="erase">Wollen Sie den gewählten Datensatz wirklich löschen?</PermissionCheck>
+
 </template>
