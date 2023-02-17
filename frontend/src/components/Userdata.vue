@@ -1,10 +1,11 @@
 <script setup>
     import { onBeforeMount, ref } from 'vue'
+    import axios from 'axios'
+    import PermissionCheck from './PermissionCheck.vue'
     import Input from './Input.vue'
     import Errors from '../util/Errors.js'
     import Param from '../util/FormParameter'
     import * as validate from '../util/InputValidator.js'
-    import axios from 'axios'
 
     const props = defineProps(["user", "mode", "privileges", "invoker"])
     const emit = defineEmits(["updated", "signedup", "returned"])
@@ -20,9 +21,9 @@
     const MODE_SIGNUP = 4
     const MODE_STRING_SIGNUP = "signup"
 
-    const PRIVILEGES_USER = 1
-    const PRIVILEGES_SUPER = 2
-    const PRIVILEGES_ADMIN = 3
+    const PRIVILEGES_USER = "1"
+    const PRIVILEGES_SUPER = "2"
+    const PRIVILEGES_ADMIN = "3"
 
     const ERR = new Errors()
     ERR.addError("Bitte prüfen Sie die Eingaben in den markierten Feldern.",
@@ -61,6 +62,7 @@
     const mode = ref(MODE_READ)
 
     const isLoading = ref(false)
+    const isEraseCheck = ref(false)
 
     onBeforeMount(() => {
         if(props.user !== undefined){
@@ -187,9 +189,20 @@
         }
     }
 
+    function checkErase(){
+        isEraseCheck.value = true
+    }
+
+    function cancelErase(){
+        isEraseCheck.value = false
+    }
+
     function erase(){
         const params = new URLSearchParams()
         params.append('email', props.user.email)
+
+        isEraseCheck.value = false;
+        isLoading.value = true;
 
         axios({
             method: 'delete',
@@ -198,13 +211,11 @@
             .then(handleDeleteResponse)
             .catch(handleDeleteError)
     }
-
     function handleDeleteResponse(response){
-        
+        isLoading.value = false
     }
-
     function handleDeleteError(error){
-
+        isLoading.value = false
     }
 
     function edit(){
@@ -213,7 +224,7 @@
         else if(mode.value === MODE_OBSERVE)
             mode.value = MODE_EDIT_OTHER
     }
-    function cancel(){
+    function cancelUpdate(){
         resetUser()
         if(mode.value === MODE_EDIT_OWN)
             mode.value = MODE_READ
@@ -223,8 +234,11 @@
 
     function getType(inputType){
         if(inputType === undefined)inputType = ''
-        if(isLoading.value)inputType = inputType + 'disabled'
-        return mode.value === MODE_READ || mode.value === MODE_OBSERVE ? 'disabled' : inputType
+        if(shouldBeDisabled())inputType = inputType + 'disabled'
+        return inputType
+    }
+    function shouldBeDisabled(){
+        return isLoading.value || isEraseCheck.value || mode.value <= MODE_READ;
     }
 
     function changesMade(){
@@ -250,13 +264,13 @@
 </script>
 
 <template>
-    <div class='content form'>
+    <div v-if="!isEraseCheck" class='content form'>
         <div v-if='mode <= MODE_EDIT_OTHER' class='userdata-heading'>
             <h1>{{ (mode === MODE_OBSERVE || mode === MODE_EDIT_OTHER) ? name.value : "My Data"}}</h1>
             <template v-if='mode <= MODE_READ'>
                 <button v-if='mode === MODE_READ || props.privileges > 1' class='edit' @click='edit'>&#9998</button>
             </template>
-            <button v-else-if='mode <= MODE_EDIT_OTHER && !isLoading' class='edit' @click='cancel'>&#10006</button>
+            <button v-else-if='mode <= MODE_EDIT_OTHER && !isLoading' class='edit' @click='cancelUpdate'>&#10006</button>
         </div>
 
         <Input label='E-Mail' :invalid='!email.isValid' v-model='email.value' :type='getType()' @focusout='checkEmail'/>
@@ -268,7 +282,7 @@
         <template v-if='mode === MODE_EDIT_OWN || (mode === MODE_EDIT_OTHER && props.privileges >= PRIVILEGES_ADMIN)'>
             <div v-if='mode !== MODE_EDIT_OWN || props.privileges >= PRIVILEGES_ADMIN' class = "input">
                 <label class="input-label">Rechte</label>
-                <select class="input-input" v-model="privileges">
+                <select class="input-input" v-model="privileges" :disabled="shouldBeDisabled()">
                     <option disabled :value="0">None</option>
                     <option :value="PRIVILEGES_USER">User</option>
                     <option :value="PRIVILEGES_SUPER">Superuser</option>
@@ -292,9 +306,10 @@
             <div v-else-if='mode >= MODE_EDIT_OWN' class='button-row'>
                 <button v-if='mode == MODE_EDIT_OTHER' class='form-button' @click="$emit('returned')">&#60</button>
                 <button class='form-button' :disabled="!changesMade()" @click='update'>Update</button>
-                <button v-if='mode == MODE_EDIT_OTHER' class='form-button delete' @click='erase'>Delete</button>
+                <button v-if='mode == MODE_EDIT_OTHER && props.privileges >= PRIVILEGES_ADMIN' class='form-button delete' @click='checkErase'>Löschen</button>
             </div>
         </template>
         <div v-else class='loader'></div>
     </div>
+    <PermissionCheck v-else="isEraseCheck" @cancel="cancelErase" @accept="erase">Wollen Sie den gewählten Datensatz wirklich löschen?</PermissionCheck>
 </template>
