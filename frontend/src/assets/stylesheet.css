@@ -1,5 +1,7 @@
 :root {
     --main-color: #EBECF0;
+    --button-color: #a0a2ae;
+    --button-hover-color: #b1b4c2;
     --secondary-color: #002d4f;
     --secondary-step-color: #003d5f;
     --secondary-emphasized-color: #1f4f77;
@@ -9,6 +11,8 @@
     --disabled-color: #d8dadf;
     --disabled-text-color: #919397;
     --error-color: #D91515;
+    --caution-color: #d34c4c;
+    --caution-step-color: #ef5959;
     --border-color: #949494;
 }
 
@@ -31,11 +35,10 @@ input, button {
 }
 
 button {
-    border: 1px solid var(--border-color);
     border-radius: 4px;
     
-    background-color: var(--main-color);
-    color: var(--secondary-color);
+    background-color: var(--button-color);
+    color: var(--main-color);
 
     width: 5em;
     min-width: fit-content;
@@ -44,7 +47,7 @@ button {
     padding-left: 0.5em;
 }
 button:hover {
-    background-color: var(--highlighted-color);
+    background-color: var(--button-hover-color);
 }
 button:disabled {
     background-color: var(--disabled-color);
@@ -62,7 +65,7 @@ a:hover {
 
 table {
     width: 100%;
-    height: 80%;
+    height: 90%;
 
     background-color: var(--secondary-step-color);
     color: var(--main-color);
@@ -83,7 +86,6 @@ th, td {
     height: 6.25%;
 
     text-align: left;
-    white-space: nowrap;
 }
 th:hover {
     background-color: var(--secondary-emphasized-color);
@@ -144,6 +146,10 @@ tr:nth-child(even) {
 .selector:hover {
     background-color: var(--secondary-emphasized-color);
 }
+.selected {
+    background-color: var(--secondary-step-color);
+    color: var(--highlighted-text-color);
+}
 
 .section-content {
     display: flex;
@@ -165,6 +171,28 @@ tr:nth-child(even) {
 }
 .form-button {
     margin-top: 1em;
+
+    border: none;
+}
+
+.delete {
+    background-color: var(--caution-color);
+    color: var(--main-color);
+    border: none;
+}
+.delete:hover {
+    background-color: var(--caution-step-color);
+}
+
+.button-row {
+    margin-top: 1em;
+
+    display: flex;
+    align-items: center;
+    gap: 2em;
+}
+.button-row .form-button{
+    margin: 0;
 }
 
 .input-message {
@@ -181,11 +209,12 @@ tr:nth-child(even) {
 .userdata-heading {
     display: flex;
     align-items: center;
+    justify-content: center;
+    gap: 0.5em;
 
     margin-bottom: 1em;
-}
-.userdata-heading h1 {
-    width: 4.8em;
+
+    width:100%;
 }
 
 .userlist {
@@ -206,6 +235,7 @@ tr:nth-child(even) {
 
 .edit {
     background-color: var(--main-color);
+    color: var(--secondary-color);
     border: none;
 
     width: 1.3em;
@@ -269,4 +299,38 @@ tr:nth-child(even) {
 
 .password {
     margin-top: 1em;
+}
+
+@media (max-width: 1000px) and (orientation:portrait){
+    .screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .section-side{
+        width: 100%;
+        height: 20%;
+    }
+
+    .section-side h1{
+        margin-bottom: 1%;
+    }
+
+    .section-content{
+        flex-direction: column;
+        align-items: center;
+
+        width: 100%;
+        height: 80%;
+    }
+
+    .userlist{
+        width: 100vw;
+        height: 80vh;
+    }
+
+    table{
+        width: 100vw;
+    }
 }

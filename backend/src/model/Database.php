@@ -18,7 +18,7 @@ if ($conn -> query($sql) === true){
 }
 
 $sql = "CREATE TABLE IF NOT EXISTS `userdata` (
-    `id` VARCHAR(16) PRIMARY KEY, 
+    `id` VARCHAR(17) PRIMARY KEY, 
     `email` VARCHAR(64) NOT NULL UNIQUE, 
     `password` VARCHAR(60) NOT NULL , 
     `name` VARCHAR(64) NOT NULL , 
@@ -33,8 +33,11 @@ if($conn -> query($sql) === false){
 }
 
 function saveUser($user){
+    return saveUserId($user, genKey());
+}
+function saveUserId($user, $id){
     global $conn;
-    $id = genKeyBase64UrlSafe();
+    $id = $id;
     $email = $user["email"];
     $password = $user["password"];
     $name = $user["name"];
@@ -61,6 +64,7 @@ function updateUser($user){
     $zip = null;
     $place = null;
     $phone = null;
+    $privileges = null;
 
     if(array_key_exists("email", $user))
         $email = $user["email"];
@@ -74,6 +78,8 @@ function updateUser($user){
         $place = $user["place"];
     if(array_key_exists("phone", $user))
         $phone = $user["phone"];
+    if(array_key_exists("privileges", $user))
+        $privileges = $user["privileges"];
 
     $sql = "UPDATE userdata SET";
     if($email !== null)$sql = $sql . ", email='$email'";
@@ -82,6 +88,7 @@ function updateUser($user){
     if($zip !== null)$sql = $sql . ", zip='$zip'";
     if($place !== null)$sql = $sql . ", place='$place'";
     if($phone !== null)$sql = $sql . ", phone='$phone'";
+    if($privileges !== null)$sql = $sql . ", privileges='$privileges'";
     $sql = $sql . " WHERE id='$id'";
 
     $pos = strpos($sql,",");
@@ -94,11 +101,10 @@ function updateUser($user){
     return true;
 }
 
-function genKeyBase64urlSafe(){
-    $encoded = base64_encode(random_bytes(12));
-    $encoded = str_replace('+','-',$encoded);
-    $encoded = str_replace('/','_',$encoded);
-    return $encoded;
+const KEY_RANDOM_DIGITS = 4;
+function genKey(){
+    $rand = random_bytes(ceil(KEY_RANDOM_DIGITS / 2));
+    return uniqid() . bin2hex($rand);
 }
 
 function getUserByEmail($email){
@@ -139,9 +145,24 @@ function getUser($id){
     }
 }
 
+function deleteUserByEmail($email){
+    global $conn;
+    $sql = "DELETE FROM userdata WHERE `email`='$email'";
+    $result = $conn->query($sql);
+
+    if($result === false){
+
+        echo "Error deleting user: " . $conn->error;
+        return false;
+    }else{
+
+        return true;
+    }
+}
+
 function getUsers(){
     global $conn;
-    $sql = "SELECT `email`, `name`, `zip`, `place`, `phone` FROM userdata";
+    $sql = "SELECT `email`, `name`, `zip`, `place`, `phone`, `privileges` FROM userdata";
     $result = $conn->query($sql);
 
     if($result === false){

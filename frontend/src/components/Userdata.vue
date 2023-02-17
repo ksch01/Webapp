@@ -2,17 +2,27 @@
     import { onBeforeMount, ref } from 'vue'
     import Input from './Input.vue'
     import Errors from '../util/Errors.js'
-    import Param from '../util/FormParameter';
+    import Param from '../util/FormParameter'
     import * as validate from '../util/InputValidator.js'
-    import axios from 'axios';
+    import axios from 'axios'
 
-    const props = defineProps(["user", "mode"])
-    const emit = defineEmits(["updated"])
+    const props = defineProps(["user", "mode", "privileges", "invoker"])
+    const emit = defineEmits(["updated", "signedup", "returned"])
 
-    const MODE_READ = "read"
-    const MODE_OBSERVE = "observe"
-    const MODE_EDIT = "edit"
-    const MODE_SIGNUP = "signup"
+    const MODE_OBSERVE = 0
+    const MODE_STRING_OBSERVE = "observe"
+    const MODE_READ = 1
+    const MODE_STRING_READ = "read"
+    const MODE_EDIT_OWN = 2
+    const MODE_STRING_EDIT_OWN = "edit"
+    const MODE_EDIT_OTHER = 3
+    const MODE_STRING_EDIT_OTHER = "editother"
+    const MODE_SIGNUP = 4
+    const MODE_STRING_SIGNUP = "signup"
+
+    const PRIVILEGES_USER = 1
+    const PRIVILEGES_SUPER = 2
+    const PRIVILEGES_ADMIN = 3
 
     const ERR = new Errors()
     ERR.addError("Bitte prüfen Sie die Eingaben in den markierten Feldern.",
@@ -36,6 +46,8 @@
     const place = ref(new Param('', validate.place))
     const phone = ref(new Param('', validate.phone))
 
+    const privileges = ref(PRIVILEGES_USER)
+
     const password = ref(new Param('', () => (mode.value !== MODE_SIGNUP && password.value.value === '') || validate.password(password.value.value)))
     const passwordR = ref(new Param('', () => (mode.value !== MODE_SIGNUP && passwordR.value.value === '') || !password.value.isValid || password.value.value === passwordR.value.value))
 
@@ -46,7 +58,7 @@
     const requestErrorServer = ref(false)
     const requestErrorUnreachable = ref(false)
 
-    const mode = ref("read")
+    const mode = ref(MODE_READ)
 
     const isLoading = ref(false)
 
@@ -56,7 +68,22 @@
         }
 
         if(props.mode !== undefined){
-            mode.value = props.mode
+            switch(props.mode){
+                case MODE_STRING_OBSERVE:
+                    mode.value = MODE_OBSERVE
+                    break
+                case MODE_STRING_READ:
+                    mode.value = MODE_READ
+                    break
+                case MODE_STRING_EDIT_OWN:
+                    mode.value = MODE_EDIT_OWN
+                    break
+                case MODE_STRING_EDIT_OTHER:
+                    mode.value = MODE_EDIT_OTHER
+                    break
+                case MODE_STRING_SIGNUP:
+                    mode.value = MODE_SIGNUP
+            }
         }
     });
 
@@ -67,6 +94,8 @@
         place.value.setAndCheck(props.user.place)
         phone.value.setAndCheck(props.user.phone)
 
+        privileges.value = props.user.privileges
+
         password.value.setAndCheck('')
         passwordR.value.setAndCheck('')
     }
@@ -75,13 +104,12 @@
         if(checkAll()){
             consentPresent.value = consent.value
             if(consent.value)
-                sendRequest()
+                sendUpdateRequest()
         }
     }
     function update(){
-        if(checkAll()){
-            sendRequest()
-        }
+        if(checkAll())
+            sendUpdateRequest()
     }
     function checkAll(){
         return email.value.check() &
@@ -92,7 +120,7 @@
         password.value.check() &
         passwordR.value.check()
     }
-    function sendRequest(){
+    function sendUpdateRequest(){
         const params = new URLSearchParams()
         if(mode.value === MODE_SIGNUP || email.value.value != props.user.email)
             params.append('email', email.value.value)
@@ -106,8 +134,14 @@
             params.append('phone', phone.value.value)
         if(password.value.value != '')
             params.append('password', password.value.value)
-        if(mode.value === MODE_EDIT)
+        if(mode.value === MODE_EDIT_OWN)
             params.append('id', props.user.id)
+        else if(mode.value === MODE_EDIT_OTHER){
+            params.append('id', props.invoker)
+            params.append('targetemail', props.user.email)
+            if(privileges.value != props.user.privileges)
+                params.append('privileges', privileges.value)
+        }
 
         isLoading.value = true
         requestErrorConflict.value = false
@@ -118,24 +152,28 @@
             method: mode.value === MODE_SIGNUP ? 'post' : 'put',
             url: 'http://localhost/index.php/account',
             data: params})
-            .then(handleResponse)
-            .catch(handleError)
+            .then(handlePutResponse)
+            .catch(handlePutError)
     }
-    function handleResponse(response){
+    function handlePutResponse(response){
         isLoading.value = false
 
-        if(mode.value === MODE_EDIT){
+        if(mode.value === MODE_EDIT_OWN || mode.value === MODE_EDIT_OTHER){
             emit("updated", {
                 email: email.value.value,
                 name: name.value.value,
                 zip: zip.value.value,
                 place: place.value.value,
-                phone: phone.value.value
+                phone: phone.value.value,
+                privileges: privileges.value
             })
-            mode.value = MODE_READ
+            if(mode.value === MODE_EDIT_OWN)
+                mode.value = MODE_READ
+            else
+                mode.value = MODE_OBSERVE
         }
     }
-    function handleError(error){
+    function handlePutError(error){
         isLoading.value = false
 
         if(error.response != undefined){
@@ -149,22 +187,44 @@
         }
     }
 
+    function erase(){
+        const params = new URLSearchParams()
+        params.append('email', props.user.email)
+
+        axios({
+            method: 'delete',
+            url: 'http://localhost/index.php/account',
+            data: params})
+            .then(handleDeleteResponse)
+            .catch(handleDeleteError)
+    }
+
+    function handleDeleteResponse(response){
+        
+    }
+
+    function handleDeleteError(error){
+
+    }
+
     function edit(){
-        mode.value = MODE_EDIT
+        if(mode.value === MODE_READ)
+            mode.value = MODE_EDIT_OWN
+        else if(mode.value === MODE_OBSERVE)
+            mode.value = MODE_EDIT_OTHER
     }
     function cancel(){
         resetUser()
-        mode.value = MODE_READ
+        if(mode.value === MODE_EDIT_OWN)
+            mode.value = MODE_READ
+        else if(mode.value === MODE_EDIT_OTHER)
+            mode.value = MODE_OBSERVE
     }
 
     function getType(inputType){
         if(inputType === undefined)inputType = ''
         if(isLoading.value)inputType = inputType + 'disabled'
         return mode.value === MODE_READ || mode.value === MODE_OBSERVE ? 'disabled' : inputType
-    }
-
-    function showPasswordEdit(){
-        return mode.value === MODE_SIGNUP || mode.value === MODE_EDIT
     }
 
     function changesMade(){
@@ -174,6 +234,7 @@
             props.user.zip === zip.value.value &&
             props.user.place === place.value.value &&
             props.user.phone === phone.value.value &&
+            props.user.privileges === privileges.value && 
             password.value.value === '' && 
             passwordR.value.value === ''
         )
@@ -190,18 +251,37 @@
 
 <template>
     <div class='content form'>
-        <div v-if='mode === MODE_READ || mode === MODE_EDIT || mode === MODE_OBSERVE' class='userdata-heading'>
-            <h1 v-if='mode === MODE_READ || mode === MODE_EDIT'>My Data</h1>
-            <button v-if='mode === MODE_READ' class='edit' @click='edit'>&#9998</button>
-            <button v-if='mode === MODE_EDIT && !isLoading' class='edit' @click='cancel'>&#10006</button>
+        <div v-if='mode <= MODE_EDIT_OTHER' class='userdata-heading'>
+            <h1>{{ (mode === MODE_OBSERVE || mode === MODE_EDIT_OTHER) ? name.value : "My Data"}}</h1>
+            <template v-if='mode <= MODE_READ'>
+                <button v-if='mode === MODE_READ || props.privileges > 1' class='edit' @click='edit'>&#9998</button>
+            </template>
+            <button v-else-if='mode <= MODE_EDIT_OTHER && !isLoading' class='edit' @click='cancel'>&#10006</button>
         </div>
+
         <Input label='E-Mail' :invalid='!email.isValid' v-model='email.value' :type='getType()' @focusout='checkEmail'/>
         <Input label='Name' :invalid='!name.isValid' v-model='name.value' :type='getType()' @focusout='checkName'/>
         <Input label='PLZ' :invalid='!zip.isValid' v-model='zip.value' :type='getType()' @focusout='checkZip'/>
         <Input label='Ort' :invalid='!place.isValid' v-model='place.value' :type='getType()' @focusout='checkPlace'/>
         <Input label='Telefon' :invalid='!phone.isValid' v-model='phone.value' :type='getType()' @focusout='checkPhone'/>
-        <Input v-if='showPasswordEdit()' class='password' label='Passwort' :invalid='!password.isValid' v-model='password.value' :type='getType("password")' @focusout='checkPassword'/>
-        <Input v-if='showPasswordEdit()' label='Wiederholen' :invalid='!passwordR.isValid' v-model='passwordR.value' :type='getType("password")' @focusout='checkPasswordR'/>
+
+        <template v-if='mode === MODE_EDIT_OWN || (mode === MODE_EDIT_OTHER && props.privileges >= PRIVILEGES_ADMIN)'>
+            <div v-if='mode !== MODE_EDIT_OWN || props.privileges >= PRIVILEGES_ADMIN' class = "input">
+                <label class="input-label">Rechte</label>
+                <select class="input-input" v-model="privileges">
+                    <option disabled :value="0">None</option>
+                    <option :value="PRIVILEGES_USER">User</option>
+                    <option :value="PRIVILEGES_SUPER">Superuser</option>
+                    <option :value="PRIVILEGES_ADMIN">Admin</option>
+                </select>
+            </div>
+            
+            <Input class='password' label='Passwort' :invalid='!password.isValid' v-model='password.value' :type='getType("password")' @focusout='checkPassword'/>
+            <Input label='Wiederholen' :invalid='!passwordR.isValid' v-model='passwordR.value' :type='getType("password")' @focusout='checkPasswordR'/>
+        </template>
+        <div v-else-if='mode == MODE_OBSERVE' class='button-row'>
+                <button class='edit' @click="$emit('returned')">&#60</button>
+        </div>
         <div v-if='mode === MODE_SIGNUP' class='consent'>
             <input type='checkbox' v-model='consent'/>
             Ich stimme den <strong>Nutzungsbedingungen</strong> zu und habe die <strong>Datenschutzerklärung</strong> gelesen.
@@ -209,7 +289,11 @@
         <div v-if='ERR.getError() !== false' class='input-message'>{{ ERR.getError() }}</div>
         <template v-if='!isLoading'>
             <button v-if='mode === MODE_SIGNUP' class='form-button' @click='signup'>Registrieren</button>
-            <button v-if='mode === MODE_EDIT' class='form-button' :disabled="!changesMade()" @click='update'>Update</button>
+            <div v-else-if='mode >= MODE_EDIT_OWN' class='button-row'>
+                <button v-if='mode == MODE_EDIT_OTHER' class='form-button' @click="$emit('returned')">&#60</button>
+                <button class='form-button' :disabled="!changesMade()" @click='update'>Update</button>
+                <button v-if='mode == MODE_EDIT_OTHER' class='form-button delete' @click='erase'>Delete</button>
+            </div>
         </template>
         <div v-else class='loader'></div>
     </div>

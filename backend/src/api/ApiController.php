@@ -1,24 +1,12 @@
 <?php
     require 'Controller.php';
     require __DIR__ . '/../model/Database.php';
+    require 'Mailer.php';
 
-    const SIGNUP_MAIL_SUBJECT = "Ihre Regestrierung";
-    function getSignupMailMessage($htmlEncodedKey){
-        "
-        <html>
-            <head>
-                <title>Ihre Regestrierung</title>
-            </head>
-            <body>
-                Klicken Sie <a href=localhost/skygate/index.php/signup/?key=$htmlEncodedKey>hier</a> um Ihre Regestrierung abzuschließen
-            </body>
-        </html>s
-        ";
-    }
-
-    function sendSingupMail($userData, $key){
-        return mail($userData["email"], SIGNUP_MAIL_SUBJECT, getSignupMailMessage($key));
-    }
+    const PRIVILEGES_NONE = 0;
+    const PRIVILEGES_USER = 1;
+    const PRIVILEGES_SUPER = 2;
+    const PRIVILEGES_ADMIN = 3;
 
     class ApiController extends Controller{
         
@@ -49,16 +37,23 @@
         function postAccount(){
             $this->requireParams(["email","name","zip","place","phone","password"]);
 
-            #TODO send signup mail and check for verification before adding user to database
-
             #check if account already exists
-            if(getUserByEmail($this->body["email"]) !== false){
+            $user = getUserByEmail($this->body["email"]);
+            if($user !== false){
                 http_response_code(409);
                 return;
             }
 
+            #TODO send signup mail
+            #$key = genKey();
+            #if(!sendSignupMail($this->body["email"], $key)){
+            #    http_response_code(500);
+            #    return;
+            #}
+
             #save to database
             $this->body["password"] = password_hash($this->body["password"], PASSWORD_DEFAULT);
+            #TODO use saveUserId
             if(!saveUser($this->body)){
                 http_response_code(500);
                 echo "The account could not be registered to the database.";
@@ -69,34 +64,55 @@
         }
 
         function putAccount(){
-            $this->requireParams(["id"]);
-            $this->requireOneOfParams(["email", "name", "zip", "place", "phone", "password"]);
+            $this->requireOneOfParams(["email", "name", "zip", "place", "phone", "password", "privileges"]);
 
-            $user = getUser($this->body["id"]);
-            if($user === false){
+            $invokerid = $this->getParam("id");
+            $invoker = getUser($invokerid);
+            if($invoker === false){
                 http_response_code(401);
                 return;
             }
-
-            if(array_key_exists("email", $this->body) && 
-                $user["email"] != $this->body["email"] && 
-                getUserByEmail($this->body["email"]) !== false){
-                
-                http_response_code(409);
-                return;
-            }
             
-            if(array_key_exists("password", $this->body)){
-                $this->body["password"] = password_hash($this->body["password"], PASSWORD_DEFAULT);
+            $target;
+            $discarded = false;
+            if($this->hasParam("targetemail")
+                && !($invoker["email"] === $this->getParam("targetemail"))){
+                
+                if($invoker["privileges"] == PRIVILEGES_SUPER){
+                    $this->requireOneOfParams(["email", "name", "zip", "place", "phone"], 403);
+                    $discarded = $this->discardParams("password", "privileges");
+                }else if($invoker["privileges"] < PRIVILEGES_SUPER){
+                    http_response_code(403);
+                    return;
+                }
+
+                $target = getUserByEmail($this->getParam("targetemail"));
+                if($target === false){
+                    http_response_code(404);
+                    return;
+                }
+            }else{
+                $target = $invoker;
             }
 
-            if(!updateUser($this->body)){
+            $this->body["id"] = $target["id"];
+            if(updateUser($this->body)){
+                if($discarded){
+                    http_response_code(206);
+                }else{
+                    http_response_code(200);
+                }
+            }else{
                 http_response_code(500);
-                echo "The account could not be updated on the database.";
-                return;
             }
+        }
 
-            http_response_code(200);
+        function deleteAccount(){
+            if(deleteUserByEmail($this->getParam("email"))){
+                http_response_code(200);
+            }else{
+                http_response_code(500);
+            }
         }
     }
 ?>

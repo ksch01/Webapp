@@ -27,7 +27,8 @@ function loggedin(loginUser){
 }
 
 function loggedout(){
-  
+  user = undefined
+  screen.value = SCREEN_LOGIN
 }
 
 </script>
@@ -36,6 +37,6 @@ function loggedout(){
   <div class='screen'>
     <Login v-if="screen === SCREEN_LOGIN" @signup="signup" @loggedin="loggedin"/>
     <Signup v-else-if="screen === SCREEN_SIGNUP"/>
-    <Main v-else-if="screen === SCREEN_MAIN" :test="user" @loggedout="loggedout"/>
+    <Main v-else-if="screen === SCREEN_MAIN" :user="user" @loggedout="loggedout"/>
   </div>
 </template>
