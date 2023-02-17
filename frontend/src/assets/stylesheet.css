@@ -30,7 +30,7 @@ body {
 
     font-family: Tahoma, Geneva, Verdana, Segoe UI, sans-serif;
 }
-input, button {
+input, button, select {
     font-family: inherit;
 }
 
@@ -53,6 +53,18 @@ button:hover {
 button:disabled {
     background-color: var(--disabled-color);
     color: var(--disabled-text-color)
+}
+
+select {
+    border: 1px solid white;
+
+    color: var(--secondary-color);
+
+    padding-right: 0.4em;
+}
+select:focus {
+    border: 1px solid white;
+    outline: 1px solid var(--highlighted-text-color);
 }
 
 a {
@@ -280,20 +292,36 @@ tr:nth-child(even) {
 
     font-size: 1.2em;
 }
+.input-dyn-label {
+    border: 1px solid var(--main-color);
+    background: var(--main-color);
+
+    color: var(--secondary-color);
+
+    padding-right: 0.4em;
+
+    font-size: 0.9em;
+}
+.input-dyn-label:focus {
+    border: 1px solid var(--main-color);
+    outline: 1px solid var(--main-color);
+}
 .input-input {
     border: none;
-
     width: 14em;
 }
 .input-input:focus {
-    outline: none;
-    border: 1px solid var(--highlighted-text-color);
+    outline: 1px solid var(--highlighted-text-color);
+    border: none;
 }
 .input-invalid {
     border: 1px solid var(--error-color);
 }
 .input-required-mark {
     width: 1em;
+}
+.input-select {
+    width: 14em;
 }
 
 .password {

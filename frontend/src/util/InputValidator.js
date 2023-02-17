@@ -1,5 +1,11 @@
 
 const validEmailRegEx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+export function number(number){
+    if(typeof number !== 'string')return false
+    number = number.replace(" ", "");
+    return parseInt(number) !== NaN
+}
+
 export function email(email){
     if(typeof email !== 'string')return false
     email = email.trim()
@@ -40,6 +46,5 @@ export function phone(phone){
     phone = phone.replace(" ","")
     phone = phone.replace("-","")
     if(phone.charAt(0) === '+')phone = phone.substring(1)
-    return phone.length >= 11 && 
-        phone.length <= 12
+    return phone.length >= 11 && phone.length <= 12 && parseInt(phone) !== NaN
 }

@@ -108,6 +108,17 @@
         }
 
         function deleteAccount(){
+            $invoker = getUser($this->getParam("id"));
+            if($invoker === false){
+                http_response_code(401);
+                return;
+            }
+
+            if($invoker["privileges"] < PRIVILEGES_ADMIN){
+                http_response_code(403);
+                return;
+            }
+
             if(deleteUserByEmail($this->getParam("email"))){
                 http_response_code(200);
             }else{

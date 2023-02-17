@@ -209,6 +209,7 @@
 
     function erase(){
         const params = new URLSearchParams()
+        params.append('id', props.invoker)
         params.append('email', props.user.email)
 
         isEraseCheck.value = false
@@ -304,7 +305,7 @@
         <template v-if='mode === MODE_EDIT_OWN || (mode === MODE_EDIT_OTHER && props.privileges >= PRIVILEGES_ADMIN)'>
             <div v-if='mode !== MODE_EDIT_OWN || props.privileges >= PRIVILEGES_ADMIN' class = "input">
                 <label class="input-label">Rechte</label>
-                <select class="input-input" v-model="privileges" :disabled="shouldBeDisabled()">
+                <select class="input-select" v-model="privileges" :disabled="shouldBeDisabled()">
                     <option disabled :value="0">None</option>
                     <option :value="PRIVILEGES_USER">User</option>
                     <option :value="PRIVILEGES_SUPER">Superuser</option>
