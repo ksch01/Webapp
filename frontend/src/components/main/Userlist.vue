@@ -4,51 +4,29 @@ import Userdata from '../Userdata.vue'
 import Table from '../Table.vue'
 import Navigator from '../Navigator.vue'
 
-const props = defineProps(["data", "email", "id", "privileges"])
-const emit = defineEmits(["selectedself", "sort", "reverse", "updated", "deleted"])
+const props = defineProps(["data", "page", "sort-attribute", "sort-direction", "email", "id", "privileges"])
+const emit = defineEmits(["selectedself", "sort", "page", "reverse", "updated", "deleted", "reload"])
 
 const SCREEN_LIST = 0;
 const SCREEN_USER = 1;
-
-const SORT_EMAIL = "email"
-const COMPARE_EMAIL = function (a,b) {return a.email.localeCompare(b.email)}
-const SORT_NAME = "name"
-const COMPARE_NAME = function (a,b) {return a.name.localeCompare(b.name)}
-const SORT_ZIP = "zip"
-const COMPARE_ZIP = function (a,b) {return a.zip - b.zip}
-const SORT_PLACE = "place"
-const COMPARE_PLACE = function (a,b) {return a.place.localeCompare(b.place)}
-const SORT_PHONE = "phone"
-const COMPARE_PHONE = function (a,b) {return a.phone - b.phone}
-
-const SORT_ASC = 0;
-const SORT_DSC = 1;
 
 const LIST_SIZE = 16;
 const emptyUser = {email: "", name: "", zip: "", place: "", phone: ""}
 const max = Math.ceil(props.data.length / LIST_SIZE)
 
-const data = ref(props.data)
-const page = ref(1)
 const displayed = ref()
-
-const sortAttribute = ref(SORT_EMAIL)
-const sortDirection = ref(SORT_ASC)
 
 const screen = ref(SCREEN_LIST)
 
 const selectedUser = ref(emptyUser)
 
-onBeforeMount(() => {
-    data.value = data.value.sort( COMPARE_EMAIL )
-    updateList()
-})
+onBeforeMount(updateList)
 onBeforeUpdate(updateList)
 
 function updateList(){
-    let start = (page.value - 1) * LIST_SIZE
-    let end = (page.value) * LIST_SIZE
-    let chunk = data.value.slice(start, end)
+    let start = (props.page - 1) * LIST_SIZE
+    let end = (props.page) * LIST_SIZE
+    let chunk = props.data.slice(start, end)
 
     let missing
     if(chunk.length === 0)
@@ -63,41 +41,15 @@ function updateList(){
 }
 
 function setPage(newPage){
-    page.value = newPage
+    emit("page",newPage)
 }
 
 function sort(by){
-    if(sortAttribute.value === by){
-        sortDirection.value = (sortDirection.value + 1) % 2
-    }else{
-        sortAttribute.value = by
-        sortDirection.value = SORT_ASC
-    }
-    
-    if(sortDirection.value === SORT_DSC){
+    if(props.sortAttribute === by){
         emit("reverse")
     }else{
-        let compare
-        switch(sortAttribute.value){
-            case SORT_EMAIL:
-                compare = COMPARE_EMAIL
-                break
-            case SORT_NAME:
-                compare = COMPARE_NAME
-                break
-            case SORT_ZIP:
-                compare = COMPARE_ZIP
-                break
-            case SORT_PLACE:
-                compare = COMPARE_PLACE
-                break;
-            case SORT_PHONE:
-                compare = COMPARE_PHONE
-        }
-        emit("sort",compare)
+        emit("sort", by);
     }
-
-    updateList()
 }
 
 function select(arg){
@@ -124,8 +76,11 @@ function setScreen(newScreen){
 
 <template>
     <div v-if="screen === SCREEN_LIST" class="userlist">
-        <Table :rows="displayed" :exclude="['privileges']" :sortAttribute='sortAttribute' :sortDirection='sortDirection' @sort="sort" @select="select"/>
-        <Navigator :current="page" :max="max" @navigate="setPage"/>
+        <Table :rows="displayed" :exclude="['privileges']" :sortAttribute='props.sortAttribute' :sortDirection='props.sortDirection' @sort="sort" @select="select"/>
+        <div class="footer">
+            <button class="reload" @click="$emit('reload')">&#8635</button>
+            <Navigator :current="page" :max="max" @navigate="setPage"/>
+        </div>
     </div>
     <Userdata v-else-if="screen === SCREEN_USER" :user="selectedUser" :invoker="props.id" :privileges="props.privileges" mode="observe" @updated="updated" @deleted="deleted" @returned="setScreen(SCREEN_LIST)"/>
 </template>
