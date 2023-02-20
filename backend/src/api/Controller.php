@@ -31,6 +31,28 @@ class Controller
         http_response_code($statusOnFail);
         exit;
     }
+    protected function requireOneOfParamsExclusive($params, $statusOnFail = 400){
+        $keyFound = false;
+        $hasOne = false;
+        foreach($this->body as $key => $value){
+            foreach($params as $paramKey){
+                if($key == $paramKey){
+                    $keyFound = true;
+                    break;
+                }
+            }
+            if($keyFound){
+                $hasOne = true;
+            }else{
+                http_response_code($statusOnFail);
+                exit;
+            }
+        }
+        if(!$hasOne){
+            http_response_code($statusOnFail);
+            exit;
+        }
+    }
 
     protected function hasParam($param){
         return array_key_exists($param, $this->body);

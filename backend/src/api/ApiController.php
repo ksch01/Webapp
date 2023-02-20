@@ -28,10 +28,18 @@
         }
 
         function getAccount(){
-            $users = getUsers();
+            if(empty($this->body)){
+
+                $users = getUsers();
+            }else{
+
+                $this->requireOneOfParamsExclusive(["email", "name", "zip", "place", "phone"]);
+                $users = searchUsers($this->body);
+            }
             header('content-type: application/json; charset=utf-8');
             http_response_code(200);
             echo json_encode($users);
+
         }
 
         function postAccount(){

@@ -179,6 +179,31 @@ function getUsers(){
     }
 }
 
+function searchUsers($query){
+    global $conn;
+    $sql = "SELECT `email`, `name`, `zip`, `place`, `phone`, `privileges` FROM userdata WHERE";
+    $and = "";
+    foreach($query as $attribute => $value){
+        $sql = $sql . $and . " `$attribute` LIKE '%$value%'";
+        if($and == "")
+            $and = "AND";
+    }
+    $result = $conn->query($sql);
+
+    if($result === false){
+        
+        echo "Error searching users: " . $conn->error;
+        return false;
+    }else{
+
+        $users = [];
+        while($row = $result->fetch_assoc()){
+            array_push($users, $row);
+        }
+        return $users;
+    }
+}
+
 function closeDatabaseConnection(){
     global $conn;
     $conn -> close();
