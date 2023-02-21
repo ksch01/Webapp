@@ -26,7 +26,7 @@ onBeforeMount(() => {
 function getColName(col){
     let colName = col.toUpperCase()
     if(props.sortAttribute === col){
-        colName += (props.sortDirection == 0) ? " &#9650" : " &#9660"
+        colName += (props.sortDirection) ? " &#9660" : " &#9650"
     }
     return colName;
 }

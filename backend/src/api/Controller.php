@@ -5,6 +5,9 @@ class Controller
 
     function __construct(){
         parse_str(file_get_contents('php://input'), $this->body);
+        foreach($_GET as $param => $value){
+            $this->body[$param] = $value;
+        }      
     }
 
     public function __call($name, $arguments){
@@ -15,7 +18,7 @@ class Controller
     protected function requireParams($params, $statusOnFail = 400){
         foreach($params as $key) {
             if(!array_key_exists($key, $this->body)){
-                echo("Param " . $key. "was required but didn't exist.");
+                echo("Param " . $key . " was required but didn't exist.");
                 http_response_code($statusOnFail);
                 exit;
             }

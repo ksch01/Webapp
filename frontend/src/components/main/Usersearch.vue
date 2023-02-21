@@ -1,22 +1,119 @@
 <script setup>
 import { ref } from 'vue'
 import Input from '../Input.vue'
-import Param from '../../util/FormParameter'
-import * as validate from '../../util/InputValidator.js'
+import axios from 'axios'
+import Userlist from './Userlist.vue'
+import Error from '../Error.vue'
+import Data from '../../util/Data.js'
+import Errors from '../../util/Errors.js'
+
+const props = defineProps([
+    "email",
+    "id",
+    "privileges"
+])
+const emit = defineEmits([
+    "updatedOther",
+    "deleted"
+])
+
+const ERR = new Errors()
+ERR.addError("Beim Bearbeiten Ihrer Anfrage ist ein Fehler aufgetreten. Versuchen Sie es später erneut.",
+() => requestErrorServer.value)
+ERR.addError("Der Server konnte nicht erreicht werden. Stellen Sie sicher, dass Sie mit dem Internet verbunden sind und versuchen Sie es erneut.",
+() => requestErrorUnreachable.value)
 
 const MODE_ONE_LINE = true
 
-const email = ref(new Param('', () => true))
-const name = ref(new Param('', () => true))
-const zip = ref(new Param('', validate.number))
-const place = ref(new Param('', () => true))
-const phone = ref(new Param('', validate.number))
+const values = ref({
+    email: "",
+    name: "",
+    zip: "",
+    place: "",
+    phone: ""
+})
+
+const requestErrorServer = ref(false)
+const requestErrorUnreachable = ref(false)
 
 const criteria = ref("email")
 const mode = ref(MODE_ONE_LINE)
 
+const data = ref(new Data())
+const displayData = ref(false)
+const page = ref(1)
+
+const loading = ref(false)
+
 function toggleMode(){
-    mode.value = !mode.value;
+    mode.value = !mode.value
+}
+
+function search(){
+    loading.value = true
+    requestErrorServer.value = false
+    requestErrorUnreachable.value = false
+
+    let search = values.value;
+    if(mode.value == MODE_ONE_LINE){
+        search = {}
+        search[criteria.value] = values.value[criteria.value]
+    }
+
+    const params = new URLSearchParams()
+    for(const [key, value] of Object.entries(search)){
+        params.append(key, value)
+    }
+
+    axios.get('http://localhost/index.php/account', { params } )
+        .then(handleResponse)
+        .catch(handleError)
+}
+function handleResponse(response){
+    loading.value = false
+
+    updateData(response.data)
+    if(response.data.length !== 0)
+        displayData.value = true
+}
+function handleError(error){
+    loading.value = false
+
+    if(error.response != undefined){
+        requestErrorServer.value = true
+    }else{
+        requestErrorUnreachable.value = true
+    }
+}
+
+function reload(){
+    search();
+}
+
+function updateData(newData){
+    data.value.update(newData)
+}
+function updatedOther(updatedUser){
+    data.value.updateUser(updatedUser)
+    emit("updatedOther", updatedUser)
+}
+function deleted(deletedUserEmail){
+    data.value.delete(deletedUserEmail)
+    emit("deleted", deletedUserEmail)
+}
+function sort(attribute){
+    data.value.sort(attribute)
+}
+function reverse(){
+    data.value.reverse()
+}
+function back(){
+    data.value.empty()
+    displayData.value = false
+}
+
+function setPage(newPage){
+    page.value = newPage
 }
 
 function getType(inputType){
@@ -25,34 +122,13 @@ function getType(inputType){
     return inputType
 }
 function shouldBeDisabled(){
-    return false;
+    return loading.value
 }
-
-function currentCriteria(){
-    switch(criteria.value){
-        case "email":
-            return email.value;
-        case "name":
-            return name.value;
-        case "zip":
-            return zip.value;
-        case "place":
-            return place.value;
-        case "phone":
-            return phone.value;
-    }
-}
-
-function checkEmail(){email.value.check()}
-function checkName(){name.value.check()}
-function checkZip(){zip.value.check()}
-function checkPlace(){place.value.check()}
-function checkPhone(){phone.value.check()}
-
 </script>
 
-<template>
-    <div class="content form">
+<template>    
+    <Userlist v-if="displayData" :data="data" :page="page" @page="setPage" :returnable="true" :email='props.email' :id='props.id' :privileges='props.privileges' @return="back" @selectedself="$emit('selectedself')" @sort="sort" @reverse="reverse" @updated="updatedOther" @deleted="deleted" @reload="reload"/>
+    <div v-else class="content form">
         <div v-if="mode" class="input">
             <select class="input-dyn-label" v-model="criteria">
                 <option value="email">E-Mail</option>
@@ -61,18 +137,20 @@ function checkPhone(){phone.value.check()}
                 <option value="place">Ort</option>
                 <option value="phone">Telefon</option>
             </select>
-            <input class="input-input" :v-model='currentCriteria()'/>
+            <input class="input-input" v-model='values[criteria]' :disabled='loading'/>
         </div>
         <template v-else>
-            <Input label='E-Mail' :invalid='!email.isValid' v-model='email.value' :type='getType()' @focusout='checkEmail'/>
-            <Input label='Name' :invalid='!name.isValid' v-model='name.value' :type='getType()' @focusout='checkName'/>
-            <Input label='PLZ' :invalid='!zip.isValid' v-model='zip.value' :type='getType()' @focusout='checkZip'/>
-            <Input label='Ort' :invalid='!place.isValid' v-model='place.value' :type='getType()' @focusout='checkPlace'/>
-            <Input label='Telefon' :invalid='!phone.isValid' v-model='phone.value' :type='getType()' @focusout='checkPhone'/>
+            <Input label='E-Mail' v-model='values.email' :type='getType()'/>
+            <Input label='Name' v-model='values.name' :type='getType()'/>
+            <Input label='PLZ' v-model='values.zip' :type='getType()'/>
+            <Input label='Ort' v-model='values.place' :type='getType()'/>
+            <Input label='Telefon' v-model='values.phone' :type='getType()'/>
         </template>
-        <div class="button-row">
+        <Error :err="ERR"/>
+        <div v-if="!loading" class="button-row">
             <button class="form-button" @click="toggleMode">{{ mode ? "Mehr" : "Weniger"}}</button>
-            <button class="form-button">Suchen</button>
+            <button class="form-button" @click="search">Suchen</button>
         </div>
+        <div v-else class='loader'></div>
     </div>
 </template>

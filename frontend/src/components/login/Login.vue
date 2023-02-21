@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import axios from 'axios'
 import Input from '../Input.vue'
+import Error from '../Error.vue'
 import Errors from '../../util/Errors.js'
 import Param from '../../util/FormParameter.js'
 import * as validate from '../../util/InputValidator.js'
@@ -92,8 +93,8 @@ function checkPassword(){password.value.check()}
             <Input label='E-mail' :invalid='!email.isValid' v-model='email.value' :type='getType()' @focusout='checkEmail'/>
             <Input label='Password' :invalid='!password.isValid' v-model='password.value' :type='getType("password")' @focusout='checkPassword'/>
             
-            <div v-if='ERR.isError()' class='input-message'>{{ ERR.getError() }}</div>
-            
+            <Error :err="ERR"/>
+                        
             <button v-if='!isLoading' class='form-button' @focusin="tryLogin">Login</button>
             <div v-else class='loader'></div>
             

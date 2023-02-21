@@ -1,6 +1,7 @@
 <script setup>
-
 import Userdata from '../Userdata.vue'
+
+defineEmits(["login"])
 
 </script>
 
@@ -9,6 +10,6 @@ import Userdata from '../Userdata.vue'
         <h1>Signup</h1>
     </div>
     <div class='section-content'>
-        <Userdata mode='signup'/>
+        <Userdata mode='signup' @login="$emit('login')"/>
     </div>
 </template>

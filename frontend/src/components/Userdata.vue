@@ -3,12 +3,13 @@
     import axios from 'axios'
     import PermissionCheck from './PermissionCheck.vue'
     import Input from './Input.vue'
+    import Error from './Error.vue'
     import Errors from '../util/Errors.js'
     import Param from '../util/FormParameter'
     import * as validate from '../util/InputValidator.js'
 
     const props = defineProps(["user", "mode", "privileges", "invoker"])
-    const emit = defineEmits(["updated", "deleted", "signedup", "returned"])
+    const emit = defineEmits(["login", "updated", "deleted", "signedup", "returned"])
 
     const MODE_OBSERVE = 0
     const MODE_STRING_OBSERVE = "observe"
@@ -58,6 +59,7 @@
     const requestErrorConflict = ref(false)
     const requestErrorServer = ref(false)
     const requestErrorUnreachable = ref(false)
+    const requestErrorUnknown = ref(false)
 
     const mode = ref(MODE_READ)
 
@@ -157,7 +159,7 @@
             .then(handlePutResponse)
             .catch(handlePutError)
     }
-    function handlePutResponse(response){
+    function handlePutResponse(){
         isLoading.value = false
 
         if(mode.value === MODE_EDIT_OWN || mode.value === MODE_EDIT_OTHER){
@@ -185,8 +187,7 @@
         if(error.response != undefined){
             if(error.response.status === 409)
                 requestErrorConflict.value = true
-                
-            if(error.response.status === 500)
+            else
                 requestErrorServer.value = true
         }else{
             requestErrorUnreachable.value = true
@@ -283,7 +284,7 @@
 
 <template>
     <PermissionCheck v-if="isEraseCheck || isErasing" :progressing="isErasing" @cancel="cancelErase" @accept="erase">Wollen Sie den gewählten Datensatz wirklich löschen?</PermissionCheck>
-    <div v-else-if="isErased" class="content">
+    <div v-else-if="isErased" class="content form">
         Der Datensatz wurde erfolgreich gelöscht.
         <button class='form-button' @click="$emit('returned')">&#60</button>
     </div>
@@ -322,7 +323,7 @@
             Ich stimme den <strong>Nutzungsbedingungen</strong> zu und habe die <strong>Datenschutzerklärung</strong> gelesen.
         </div>
         
-        <div v-if='mode >= MODE_READ && ERR.isError()' class='input-message'>{{ ERR.getError() }}</div>
+        <Error v-if='mode >= MODE_EDIT_OWN' :err="ERR"/>
         
         <button v-if='mode === MODE_OBSERVE' class='form-button' @click="$emit('returned')">&#60</button>
 
@@ -336,6 +337,10 @@
         </template>
 
         <div v-else class='loader'></div>
+
+        <div v-if="mode === MODE_SIGNUP">
+            Sie haben bereits ein Konto? Zum anmelden <a @click='$emit("login")'>hier</a> klicken
+        </div>
     </div>
 
 </template>

@@ -28,9 +28,10 @@
 		require "api/ApiController.php";
 		$controller = new ApiController();
 
-		if(array_key_exists(2,$pathElements))
-			$apiCall = getControllerFunction($pathElements[2]);
-		else
+		if(array_key_exists(2,$pathElements)){
+			$elements = explode('?', $pathElements[2]);
+			$apiCall = getControllerFunction($elements[0]);
+		}else
 			$apiCall = strtolower($_SERVER['REQUEST_METHOD']);
 
 		$controller->{$apiCall}();

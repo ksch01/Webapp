@@ -4,15 +4,31 @@ import Userdata from '../Userdata.vue'
 import Table from '../Table.vue'
 import Navigator from '../Navigator.vue'
 
-const props = defineProps(["data", "page", "sort-attribute", "sort-direction", "email", "id", "privileges"])
-const emit = defineEmits(["selectedself", "sort", "page", "reverse", "updated", "deleted", "reload"])
+const props = defineProps([
+    "data", 
+    "page", 
+    "email", 
+    "id", 
+    "privileges",
+    "returnable"
+])
+const emit = defineEmits([
+    "sort", 
+    "reverse", 
+    "page", 
+    "reload", 
+    "return", 
+    "updated", 
+    "deleted", 
+    "selectedself"
+])
 
 const SCREEN_LIST = 0;
 const SCREEN_USER = 1;
 
 const LIST_SIZE = 16;
 const emptyUser = {email: "", name: "", zip: "", place: "", phone: ""}
-const max = Math.ceil(props.data.length / LIST_SIZE)
+const max = Math.ceil(props.data.value.length / LIST_SIZE)
 
 const displayed = ref()
 
@@ -26,7 +42,7 @@ onBeforeUpdate(updateList)
 function updateList(){
     let start = (props.page - 1) * LIST_SIZE
     let end = (props.page) * LIST_SIZE
-    let chunk = props.data.slice(start, end)
+    let chunk = props.data.value.slice(start, end)
 
     let missing
     if(chunk.length === 0)
@@ -45,17 +61,16 @@ function setPage(newPage){
 }
 
 function sort(by){
-    if(props.sortAttribute === by){
+    if(props.data.sortAttribute.attribute === by){
         emit("reverse")
     }else{
         emit("sort", by);
     }
 }
-
 function select(arg){
     if(props.email === arg.email){
         emit("selectedself")
-    }else{
+    }else if(arg.email !== ""){
         selectedUser.value = arg
         setScreen(SCREEN_USER)
     }
@@ -69,6 +84,11 @@ function deleted(deletedUserEmail){
     emit('deleted', deletedUserEmail)
 }
 
+function reload(){
+    updateList()
+    emit("reload")
+}
+
 function setScreen(newScreen){
     screen.value = newScreen
 }
@@ -76,9 +96,10 @@ function setScreen(newScreen){
 
 <template>
     <div v-if="screen === SCREEN_LIST" class="userlist">
-        <Table :rows="displayed" :exclude="['privileges']" :sortAttribute='props.sortAttribute' :sortDirection='props.sortDirection' @sort="sort" @select="select"/>
+        <Table :rows="displayed" :exclude="['privileges']" :sortAttribute='props.data.sortAttribute.attribute' :sortDirection='props.data.sortDirection' @sort="sort" @select="select"/>
         <div class="footer">
-            <button class="reload" @click="$emit('reload')">&#8635</button>
+            <button class="reload" @click="reload">&#8635</button>
+            <button class="reload" v-if="props.returnable" @click="$emit('return')">&#60</button>
             <Navigator :current="page" :max="max" @navigate="setPage"/>
         </div>
     </div>
