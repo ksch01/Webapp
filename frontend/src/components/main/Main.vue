@@ -82,17 +82,19 @@ function getSelectorClass(screen){
 <template>
     <div class='section-side'>
         <h1>WebApp</h1>
-        <div :class='getSelectorClass(SCREEN_MYDATA)' @click='setScreen(SCREEN_MYDATA)'>
-            <label>My Data</label>
-        </div>
-        <div :class='getSelectorClass(SCREEN_LISTPERSONS)' @click='setScreen(SCREEN_LISTPERSONS)'>
-            <label>List Persons</label>
-        </div>
-        <div :class='getSelectorClass(SCREEN_SEARCH)' @click='setScreen(SCREEN_SEARCH)'>
-            <label>Search</label>
-        </div>
-        <div class='selector' @click='$emit("loggedout")'>
-             <label>Logout</label>
+        <div class="selectors">
+            <div :class='getSelectorClass(SCREEN_MYDATA)' @click='setScreen(SCREEN_MYDATA)'>
+                <label>My Data</label>
+            </div>
+            <div :class='getSelectorClass(SCREEN_LISTPERSONS)' @click='setScreen(SCREEN_LISTPERSONS)'>
+                <label>List Persons</label>
+            </div>
+            <div :class='getSelectorClass(SCREEN_SEARCH)' @click='setScreen(SCREEN_SEARCH)'>
+                <label>Search</label>
+            </div>
+            <div class='selector' @click='$emit("loggedout")'>
+                <label>Logout</label>
+            </div>
         </div>
     </div>
     <div class='section-content'>

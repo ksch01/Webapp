@@ -8,5 +8,8 @@
 *.sln
 *.sw?
 
+# Composer
+vendor/*
+
 # Misc
 *.bat

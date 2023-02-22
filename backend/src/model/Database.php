@@ -144,6 +144,21 @@ function getUser($id){
         }
     }
 }
+function activateUser($key){
+    global $conn;
+    $id = genKey();
+    $sql = "UPDATE userdata SET `id`='$id', `privileges`='1' WHERE `id`='$key'";
+    $result = $conn->query($sql);
+
+    if($result === false){
+        
+        echo "Error activating user: " . $conn->error;
+        return false;
+    }else{
+
+        return $id;
+    }
+}
 
 function deleteUserByEmail($email){
     global $conn;

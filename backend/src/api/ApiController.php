@@ -58,6 +58,8 @@
             #    http_response_code(500);
             #    return;
             #}
+            $key = genKey();
+            sendSignupMail($this->body["email"], $key);
 
             #save to database
             $this->body["password"] = password_hash($this->body["password"], PASSWORD_DEFAULT);
@@ -132,6 +134,22 @@
             }else{
                 http_response_code(500);
             }
+        }
+
+        function getVarify(){
+            $invoker = getUser($this->getParam("key"));
+            if($invoker === false){
+                http_response_code(410);
+                return;
+            }
+
+            $id = activateUser($this->getParam("key"));
+            if($id === false){
+                http_response_code(500);
+                return;
+            }
+
+            header("Location: http://localhost:5173/activated");
         }
     }
 ?>
