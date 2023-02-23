@@ -10,13 +10,13 @@
     $mail->SMTPAuth = true;
     $mail->SMPTSecure = "tls";
 
-    $mail->Port = 587;
-    $mail->Host = "smtp.gmail.com";
-    $mail->Username = "noreply";
-    $mail->Password = "aqpyfqztcmswfgqh";
+    $mail->Port = smtpPort;
+    $mail->Host = smtpAddress;
+    $mail->Username = mailUsername;
+    $mail->Password = mailPassword;
 
     $mail->isHTML();
-    $mail->setFrom("ks0122021@gmail.com");
+    $mail->setFrom(mailUsername);
     $mail->Subject = "Ihre Regestrierung";
     
     const SIGNUP_MAIL_SUBJECT = "Ihre Regestrierung";
@@ -38,9 +38,7 @@
         $mail->addAddress($email);
         $mail->msgHtml(getSignupMailMessage($key));
         
-        if($mail->send()){
-            echo "E-mail sent successfully.";
-        }else{
+        if(!$mail->send()){
             echo "Error while sending Email.";
             http_response_code(500);
             exit;

@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import Login from './components/login/Login.vue'
 import Signup from './components/login/Signup.vue'
-import Main from './components/main/Main.vue'
+import Main from './components/main/Application.vue'
 
 const SCREEN_LOGIN = 0
 const SCREEN_SIGNUP = 1

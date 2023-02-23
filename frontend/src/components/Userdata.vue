@@ -59,7 +59,6 @@
     const requestErrorConflict = ref(false)
     const requestErrorServer = ref(false)
     const requestErrorUnreachable = ref(false)
-    const requestErrorUnknown = ref(false)
 
     const mode = ref(MODE_READ)
 
@@ -176,6 +175,8 @@
                 mode.value = MODE_READ
             else
                 mode.value = MODE_OBSERVE
+        }else{
+            emit("signedup")
         }
     }
     function handlePutError(error){
@@ -303,8 +304,8 @@
         <Input label='Ort' :invalid='!place.isValid' v-model='place.value' :type='getType()' @focusout='checkPlace'/>
         <Input label='Telefon' :invalid='!phone.isValid' v-model='phone.value' :type='getType()' @focusout='checkPhone'/>
 
-        <template v-if='mode === MODE_EDIT_OWN || (mode === MODE_EDIT_OTHER && props.privileges >= PRIVILEGES_ADMIN)'>
-            <div v-if='mode !== MODE_EDIT_OWN || props.privileges >= PRIVILEGES_ADMIN' class = "input">
+        <template v-if='mode === MODE_EDIT_OWN || (mode === MODE_EDIT_OTHER && props.privileges >= PRIVILEGES_ADMIN) || mode === MODE_SIGNUP'>
+            <div v-if='mode <= MODE_EDIT_OTHER && (mode !== MODE_EDIT_OWN || props.privileges >= PRIVILEGES_ADMIN)' class = "input">
                 <label class="input-label">Rechte</label>
                 <select class="input-select" v-model="privileges" :disabled="shouldBeDisabled()">
                     <option disabled :value="0">None</option>

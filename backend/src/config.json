@@ -1,0 +1,9 @@
+{
+    "frontendAddress": "http://localhost:5173",
+
+    "smtpAddress": "smtp.gmail.com",
+    "smtpPort": 587,
+
+    "mailUsername": "example@example.example",
+    "mailPassword": "examplepassword"
+}

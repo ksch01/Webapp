@@ -9,7 +9,7 @@ import * as validate from '../../util/InputValidator.js'
 
 const emit = defineEmits(['signup', 'loggedin'])
 
-const ERR = new Errors();
+const ERR = new Errors()
 
 ERR.addError(
     "Bitte geben Sie eine gültige Email und ein gültiges Passwort ein.",
@@ -17,6 +17,9 @@ ERR.addError(
 ERR.addError(
     "Die von Ihnen angegebene Email oder das Passwort ist nicht korrekt.",
     () => {return requestErrorData.value})
+ERR.addError(
+    "Ihre Regestrierung wurde noch nicht abgeschlossen. Um die Regestrierung abzuschließen folgen Sie dem Link in Ihrer E-Mail.",
+    () => {return requestErrorUnauthorized.value})
 ERR.addError(
     "Beim Bearbeiten Ihrer Anfrage ist ein Fehler aufgetreten. Versuchen Sie es später erneut.",
     () => {return requestErrorServer.value})
@@ -28,6 +31,7 @@ const email = ref(new Param('', validate.email))
 const password = ref(new Param('', validate.password))
 
 const requestErrorData = ref(false)
+const requestErrorUnauthorized = ref(false)
 const requestErrorServer = ref(false)
 const requestErrorUnreachable = ref(false)
 
@@ -48,6 +52,7 @@ function tryLogin(){
 
         isLoading.value = true
         requestErrorData.value = false
+        requestErrorUnauthorized.value = false
         requestErrorServer.value = false
         requestErrorUnreachable.value = false
 
@@ -65,6 +70,8 @@ function handleError(error){
     if(error.response != undefined){
         if(error.response.status === 401)
             requestErrorData.value = true
+        else if(error.response.status === 403)
+            requestErrorUnauthorized.value = true
         else if(error.response.status === 500)
             requestErrorServer.value = true
     }else{

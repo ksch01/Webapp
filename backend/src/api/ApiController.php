@@ -20,6 +20,12 @@
                 return;           
             }
 
+            if($user["privileges"] == 0){
+
+                http_response_code(403);
+                return;
+            }
+
             unset($user["password"]);
             
             header('content-type: application/json; charset=utf-8');
@@ -52,19 +58,13 @@
                 return;
             }
 
-            #TODO send signup mail
-            #$key = genKey();
-            #if(!sendSignupMail($this->body["email"], $key)){
-            #    http_response_code(500);
-            #    return;
-            #}
             $key = genKey();
             sendSignupMail($this->body["email"], $key);
 
             #save to database
             $this->body["password"] = password_hash($this->body["password"], PASSWORD_DEFAULT);
             #TODO use saveUserId
-            if(!saveUser($this->body)){
+            if(!saveUserId($this->body, $key)){
                 http_response_code(500);
                 echo "The account could not be registered to the database.";
                 return;
@@ -139,7 +139,8 @@
         function getVarify(){
             $invoker = getUser($this->getParam("key"));
             if($invoker === false){
-                http_response_code(410);
+                header("Location: " . frontendAddress . "/#/invalid");
+                http_response_code(301);
                 return;
             }
 
@@ -149,7 +150,8 @@
                 return;
             }
 
-            header("Location: http://localhost:5173/activated");
+            header("Location: " . frontendAddress . "/#/activated");
+            http_response_code(303);
         }
     }
 ?>

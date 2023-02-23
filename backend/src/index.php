@@ -9,6 +9,12 @@
 
 	include 'config.php';
 
+	$configPath = 'config.json';
+	$config = json_decode(file_get_contents($configPath));
+	foreach($config as $key => $value){
+		define($key, $value);
+	}
+
 	function getControllerFunction(String $pathElement){
 
 		$requestMethod = strtolower($_SERVER['REQUEST_METHOD']);

@@ -37,7 +37,6 @@ function saveUser($user){
 }
 function saveUserId($user, $id){
     global $conn;
-    $id = $id;
     $email = $user["email"];
     $password = $user["password"];
     $name = $user["name"];
