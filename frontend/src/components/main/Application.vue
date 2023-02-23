@@ -5,9 +5,16 @@ import Userdata from '../Userdata.vue'
 import Userlist from './Userlist.vue'
 import Usersearch from './Usersearch.vue'
 import Data from '../../util/Data.js'
+import Errors from '../../util/Errors.js'
 
 const props = defineProps(['user'])
 defineEmits(['loggedout', 'updated'])
+
+const ERR = new Errors()
+ERR.addError("Die Daten konnte aufgrund eines Server Fehlers nicht abgerufen werden.",
+() => requestErrorServer.value)
+ERR.addError("Der Server konnte nicht erreicht werden.",
+() => requestErrorUnreachable.value)
 
 const SCREEN_WELCOME = 0
 const SCREEN_MYDATA = 1
@@ -21,19 +28,34 @@ const user = ref(props.user)
 const data = ref(new Data())
 const page = ref(1)
 
+const isLoading = ref(false)
+const requestErrorServer = ref(false)
+const requestErrorUnreachable = ref(false)
+
 onBeforeMount(() => {
     loadData()
 })
 function loadData(){
+    isLoading.value = true;
+    requestErrorServer.value = false;
+    requestErrorUnreachable.value = false;
+
     axios.get('http://localhost/index.php/account')
         .then(handleReceiveData)
         .catch(handleError)
 }
 function handleReceiveData(response){
     updateData(response.data)
+    isLoading.value = false;
 }
 function handleError(error){
-    console.log(error)
+    if(error.response != undefined){
+        requestErrorServer.value = true
+    }else{
+        requestErrorUnreachable.value = true
+    }
+    
+    isLoading.value = false;
 }
 
 function reload(){
@@ -100,7 +122,7 @@ function getSelectorClass(screen){
     <div class='section-content'>
         <div class='content welcome' v-if='contentScreen === SCREEN_WELCOME'>Willkommen {{ user.name }}!</div>
         <Userdata v-else-if='contentScreen === SCREEN_MYDATA' :user='user' :privileges='user.privileges' @updated="updated"/>
-        <Userlist v-else-if='contentScreen === SCREEN_LISTPERSONS' :data='data' :page='page' :email='user.email' :id='user.id' :privileges='user.privileges' @selectedself="setScreen(SCREEN_MYDATA)" @sort="sort" @reverse="reverse" @page="setPage" @updated="updatedOther" @deleted="deleted" @reload="reload"/>
+        <Userlist v-else-if='contentScreen === SCREEN_LISTPERSONS' :data='data' :page='page' :email='user.email' :id='user.id' :privileges='user.privileges' :isLoading="isLoading" :err="ERR" @selectedself="setScreen(SCREEN_MYDATA)" @sort="sort" @reverse="reverse" @page="setPage" @updated="updatedOther" @deleted="deleted" @reload="reload"/>
         <Usersearch v-else-if='contentScreen === SCREEN_SEARCH' :email='user.email' :id='user.id' :privileges='user.privileges' @selectedself="setScreen(SCREEN_MYDATA)" @updatedOther="updatedOther" @deleted="deleted"/>
     </div>
 </template>

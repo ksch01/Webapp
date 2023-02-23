@@ -302,9 +302,30 @@ tr:nth-child(even) {
     animation: spinner 1.2s ease-in-out infinite;
 }
 
+.small-loader {
+    border: 0.2em solid var(--highlighted-color);
+    border-top: 0.2em solid var(--highlighted-text-color);
+    border-radius: 50%;
+    width: 1em;
+    height: 1em;
+    animation: spinner 1.2s ease-in-out infinite;
+    margin-left: 1.45em;
+    margin-top: 0.4em;
+}
+
 @keyframes spinner {
     0% { transform: rotate(60deg); }
     100% { transform: rotate(420deg); }
+}
+
+.reload:hover .rotate{
+    display: block;
+    animation: rotation 1.5s linear infinite;
+}
+
+@keyframes rotation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .input {

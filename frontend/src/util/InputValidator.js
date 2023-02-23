@@ -1,11 +1,9 @@
-
-const validEmailRegEx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export function number(number){
     if(typeof number !== 'string')return false
-    number = number.replace(" ", "");
-    return parseInt(number) !== NaN
+    return !isNaN(parseInt(number))
 }
 
+const validEmailRegEx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export function email(email){
     if(typeof email !== 'string')return false
     email = email.trim()

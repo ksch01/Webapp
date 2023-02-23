@@ -3,6 +3,7 @@ import { ref, onBeforeUpdate, onBeforeMount } from 'vue'
 import Userdata from '../Userdata.vue'
 import Table from '../Table.vue'
 import Navigator from '../Navigator.vue'
+import Error from '../Error.vue'
 
 const props = defineProps([
     "data", 
@@ -10,7 +11,9 @@ const props = defineProps([
     "email", 
     "id", 
     "privileges",
-    "returnable"
+    "isLoading",
+    "returnable",
+    "err"
 ])
 const emit = defineEmits([
     "sort", 
@@ -28,7 +31,7 @@ const SCREEN_USER = 1;
 
 const LIST_SIZE = 16;
 const emptyUser = {email: "", name: "", zip: "", place: "", phone: ""}
-const max = Math.ceil(props.data.value.length / LIST_SIZE)
+let max = Math.ceil(props.data.value.length / LIST_SIZE)
 
 const displayed = ref()
 
@@ -52,7 +55,8 @@ function updateList(){
 
     for(let i = 0; i < missing; i++)
         chunk.push(emptyUser)
-
+   
+    max = Math.ceil(props.data.value.length / LIST_SIZE)
     displayed.value = chunk
 }
 
@@ -85,8 +89,9 @@ function deleted(deletedUserEmail){
 }
 
 function reload(){
-    updateList()
-    emit("reload")
+    if(!props.isLoading){
+        emit("reload")
+    }
 }
 
 function setScreen(newScreen){
@@ -98,8 +103,14 @@ function setScreen(newScreen){
     <div v-if="screen === SCREEN_LIST" class="userlist">
         <Table :rows="displayed" :exclude="['privileges']" :sortAttribute='props.data.sortAttribute.attribute' :sortDirection='props.data.sortDirection' @sort="sort" @select="select"/>
         <div class="footer">
-            <button class="reload" @click="reload">&#8635</button>
+            <div v-if='props.isLoading' class='small-loader'/>
+            <button v-else class='reload' @click="reload">
+                <span class="rotate">
+                    &#8635
+                </span>
+            </button>
             <button class="reload" v-if="props.returnable" @click="$emit('return')">&#60</button>
+            <Error :err="props.err"/>
             <Navigator :current="page" :max="max" @navigate="setPage"/>
         </div>
     </div>

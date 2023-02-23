@@ -298,11 +298,11 @@
             <button v-else-if='mode <= MODE_EDIT_OTHER && !isLoading' class='edit' @click='cancelUpdate'>&#10006</button>
         </div>
 
-        <Input label='E-Mail' :invalid='!email.isValid' v-model='email.value' :type='getType()' @focusout='checkEmail'/>
-        <Input label='Name' :invalid='!name.isValid' v-model='name.value' :type='getType()' @focusout='checkName'/>
-        <Input label='PLZ' :invalid='!zip.isValid' v-model='zip.value' :type='getType()' @focusout='checkZip'/>
+        <Input label='E-Mail' :invalid='!email.isValid' v-model='email.value' :type='getType("email")' @focusout='checkEmail'/>
+        <Input label='Name' :invalid='!name.isValid' v-model='name.value' :type='getType("email")' @focusout='checkName'/>
+        <Input label='PLZ' :invalid='!zip.isValid' v-model='zip.value' :type='getType("number")' @focusout='checkZip'/>
         <Input label='Ort' :invalid='!place.isValid' v-model='place.value' :type='getType()' @focusout='checkPlace'/>
-        <Input label='Telefon' :invalid='!phone.isValid' v-model='phone.value' :type='getType()' @focusout='checkPhone'/>
+        <Input label='Telefon' :invalid='!phone.isValid' v-model='phone.value' :type='getType("tel")' @focusout='checkPhone'/>
 
         <template v-if='mode === MODE_EDIT_OWN || (mode === MODE_EDIT_OTHER && props.privileges >= PRIVILEGES_ADMIN) || mode === MODE_SIGNUP'>
             <div v-if='mode <= MODE_EDIT_OTHER && (mode !== MODE_EDIT_OWN || props.privileges >= PRIVILEGES_ADMIN)' class = "input">

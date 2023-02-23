@@ -18,6 +18,8 @@ const emit = defineEmits([
 ])
 
 const ERR = new Errors()
+ERR.addError("Für Ihre Suche wurden keine Ergebnisse gefunden.",
+() => requestErrorEmpty.value)
 ERR.addError("Beim Bearbeiten Ihrer Anfrage ist ein Fehler aufgetreten. Versuchen Sie es später erneut.",
 () => requestErrorServer.value)
 ERR.addError("Der Server konnte nicht erreicht werden. Stellen Sie sicher, dass Sie mit dem Internet verbunden sind und versuchen Sie es erneut.",
@@ -33,6 +35,7 @@ const values = ref({
     phone: ""
 })
 
+const requestErrorEmpty = ref(false)
 const requestErrorServer = ref(false)
 const requestErrorUnreachable = ref(false)
 
@@ -43,14 +46,15 @@ const data = ref(new Data())
 const displayData = ref(false)
 const page = ref(1)
 
-const loading = ref(false)
+const isLoading = ref(false)
 
 function toggleMode(){
     mode.value = !mode.value
 }
 
 function search(){
-    loading.value = true
+    isLoading.value = true
+    requestErrorEmpty.value = false
     requestErrorServer.value = false
     requestErrorUnreachable.value = false
 
@@ -70,20 +74,24 @@ function search(){
         .catch(handleError)
 }
 function handleResponse(response){
-    loading.value = false
+    isLoading.value = false
 
     updateData(response.data)
     if(response.data.length !== 0)
         displayData.value = true
+    else
+        requestErrorEmpty.value = true
 }
 function handleError(error){
-    loading.value = false
+    isLoading.value = false
 
     if(error.response != undefined){
         requestErrorServer.value = true
     }else{
         requestErrorUnreachable.value = true
     }
+
+    displayData.value = false;
 }
 
 function reload(){
@@ -122,12 +130,12 @@ function getType(inputType){
     return inputType
 }
 function shouldBeDisabled(){
-    return loading.value
+    return isLoading.value
 }
 </script>
 
-<template>    
-    <Userlist v-if="displayData" :data="data" :page="page" @page="setPage" :returnable="true" :email='props.email' :id='props.id' :privileges='props.privileges' @return="back" @selectedself="$emit('selectedself')" @sort="sort" @reverse="reverse" @updated="updatedOther" @deleted="deleted" @reload="reload"/>
+<template>
+    <Userlist v-if="displayData" :data="data" :page="page" @page="setPage" :returnable="true" :email='props.email' :id='props.id' :privileges='props.privileges' :isLoading="isLoading" @return="back" @selectedself="$emit('selectedself')" @sort="sort" @reverse="reverse" @updated="updatedOther" @deleted="deleted" @reload="reload"/>
     <div v-else class="content form">
         <div v-if="mode" class="input">
             <select class="input-dyn-label" v-model="criteria">
@@ -137,7 +145,7 @@ function shouldBeDisabled(){
                 <option value="place">Ort</option>
                 <option value="phone">Telefon</option>
             </select>
-            <input class="input-input" v-model='values[criteria]' :disabled='loading'/>
+            <input class="input-input" v-model='values[criteria]' :disabled='isLoading'/>
         </div>
         <template v-else>
             <Input label='E-Mail' v-model='values.email' :type='getType()'/>
@@ -147,7 +155,7 @@ function shouldBeDisabled(){
             <Input label='Telefon' v-model='values.phone' :type='getType()'/>
         </template>
         <Error :err="ERR"/>
-        <div v-if="!loading" class="button-row">
+        <div v-if="!isLoading" class="button-row">
             <button class="form-button" @click="toggleMode">{{ mode ? "Mehr" : "Weniger"}}</button>
             <button class="form-button" @click="search">Suchen</button>
         </div>

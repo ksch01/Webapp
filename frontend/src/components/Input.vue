@@ -1,7 +1,7 @@
 <script setup>
 
 const props = defineProps(['label', 'type', 'invalid', 'modelValue'])
-defineEmits(['update:modelValue', 'focusout', 'onkeyPress:event'])
+const emit = defineEmits(['update:modelValue', 'focusout', 'onkeyPress:event'])
 
 function getType(){
     if(props.type.includes('password'))return 'password'
@@ -18,7 +18,7 @@ function getType(){
             :type="getType()" 
             :value="modelValue" 
             :disabled="type.includes('disabled')" 
-            @input="$emit('update:modelValue', $event.target.value)" 
+            @input="emit('update:modelValue', $event.target.value)" 
             @focusout="$emit('focusout')" 
             @onkeypress="$emit('onkeyPress', $event)"
         />
