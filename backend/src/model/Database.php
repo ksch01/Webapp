@@ -1,8 +1,6 @@
 <?php
-$servername = "localhost";
-$username = "root";
 
-$conn = new mysqli($servername, $username);
+$conn = new mysqli(mysqlAddress, mysqlUsername, mysqlPassword);
 
 if($conn->connect_errno){
     die("Database connection failed: " . §conn->connect_error);

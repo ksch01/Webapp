@@ -4,6 +4,10 @@
     "smtpAddress": "smtp.gmail.com",
     "smtpPort": 587,
 
-    "mailUsername": "example@example.example",
-    "mailPassword": "examplepassword"
+    "mailUsername": "ks0122021@gmail.com",
+    "mailPassword": "aqpyfqztcmswfgqh",
+
+    "mysqlAddress": "localhost",
+    "mysqlUsername": "root",
+    "mysqlPassword": ""
 }
