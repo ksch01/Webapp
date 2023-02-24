@@ -125,6 +125,15 @@
         password.value.check() &
         passwordR.value.check()
     }
+    function validInput(){
+        return (email.value.isValid &&
+        name.value.isValid && 
+        zip.value.isValid && 
+        place.value.isValid && 
+        phone.value.isValid && 
+        password.value.isValid && 
+        passwordR.value.isValid)
+    }
     function sendUpdateRequest(){
         const params = new URLSearchParams()
         if(mode.value === MODE_SIGNUP || email.value.value != props.user.email)
@@ -261,7 +270,7 @@
         return isLoading.value || isEraseCheck.value || mode.value <= MODE_READ;
     }
 
-    function changesMade(){
+    function validUpdate(){
         return !(
             props.user.email === email.value.value &&
             props.user.name === name.value.value &&
@@ -271,7 +280,7 @@
             props.user.privileges === privileges.value && 
             password.value.value === '' && 
             passwordR.value.value === ''
-        )
+        ) && validInput()
     }
 
     function checkEmail(){email.value.check()}
@@ -332,7 +341,7 @@
             <button v-if='mode === MODE_SIGNUP' class='form-button' @click='signup'>Registrieren</button>
             <div v-else-if='mode >= MODE_EDIT_OWN' class='button-row'>
                 <button v-if='mode == MODE_EDIT_OTHER' class='form-button' @click="$emit('returned')">&#60</button>
-                <button class='form-button' :disabled="!changesMade()" @click='update'>Update</button>
+                <button class='form-button' :disabled="!validUpdate()" @click='update'>Update</button>
                 <button v-if='mode == MODE_EDIT_OTHER && props.privileges >= PRIVILEGES_ADMIN' class='form-button delete' @click='checkErase'>Löschen</button>
             </div>
         </template>

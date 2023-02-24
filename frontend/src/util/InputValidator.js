@@ -1,8 +1,3 @@
-export function number(number){
-    if(typeof number !== 'string')return false
-    return !isNaN(parseInt(number))
-}
-
 const validEmailRegEx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export function email(email){
     if(typeof email !== 'string')return false
@@ -26,11 +21,12 @@ export function name(name){
 
 export function zip(zip){
     if(typeof zip !== 'string')return false
-    zip = parseInt(zip.trim())
-    return zip !== NaN &&
-        zip > 0 && 
-        zip <= 99999
+    let zipInt = parseInt(zip)
+    return !isNaN(zip) &&
+        zipInt >= 0 && 
+        zipInt <= 99999
 }
+
 
 export function place(place){
     if(typeof place !== 'string')return false
@@ -41,8 +37,15 @@ export function place(place){
 
 export function phone(phone){
     if(typeof phone !== 'string')return false
-    phone = phone.replace(" ","")
+    phone = phone.replace(/\s+/g, "")
     phone = phone.replace("-","")
     if(phone.charAt(0) === '+')phone = phone.substring(1)
-    return phone.length >= 11 && phone.length <= 12 && parseInt(phone) !== NaN
+    return phone.length >= 11 && phone.length <= 12 && !isNaN(phone)
+}
+export function phoneMax(phone){
+    if(typeof phone !== 'string')return false
+    phone = phone.replace(/\s+/g, "")
+    phone = phone.replace("-", "")
+    if(phone.charAt(0) === "+")phone = phone.substring(1)
+    return ((phone.length <= 12) && !isNaN(phone))
 }

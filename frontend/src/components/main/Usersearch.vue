@@ -6,6 +6,8 @@ import Userlist from './Userlist.vue'
 import Error from '../Error.vue'
 import Data from '../../util/Data.js'
 import Errors from '../../util/Errors.js'
+import * as validate from '../../util/InputValidator.js'
+import Param from '../../util/FormParameter.js'
 
 const props = defineProps([
     "email",
@@ -18,6 +20,8 @@ const emit = defineEmits([
 ])
 
 const ERR = new Errors()
+ERR.addError("Bitte prüfen Sie die Eingaben in den markierten Feldern.",
+isInputError)
 ERR.addError("Für Ihre Suche wurden keine Ergebnisse gefunden.",
 () => requestErrorEmpty.value)
 ERR.addError("Beim Bearbeiten Ihrer Anfrage ist ein Fehler aufgetreten. Versuchen Sie es später erneut.",
@@ -28,11 +32,11 @@ ERR.addError("Der Server konnte nicht erreicht werden. Stellen Sie sicher, dass 
 const MODE_ONE_LINE = true
 
 const values = ref({
-    email: "",
-    name: "",
-    zip: "",
-    place: "",
-    phone: ""
+    email: {value:""},
+    name: {value:""},
+    zip: new Param("", (value) => value === "" || validate.zip(value)),
+    place: {value:""},
+    phone: new Param("", validate.phoneMax)
 })
 
 const requestErrorEmpty = ref(false)
@@ -58,10 +62,16 @@ function search(){
     requestErrorServer.value = false
     requestErrorUnreachable.value = false
 
-    let search = values.value;
+    let search = {
+        email: {value: values.value.email.value},
+        name: {value: values.value.name.value},
+        zip: {value: values.value.zip.value},
+        place: {value: values.value.place.value},
+        phone: {value: values.value.phone.value}
+    }
     if(mode.value == MODE_ONE_LINE){
         search = {}
-        search[criteria.value] = values.value[criteria.value]
+        search[criteria.value] = values.value[criteria.value].value
     }
 
     const params = new URLSearchParams()
@@ -124,6 +134,22 @@ function setPage(newPage){
     page.value = newPage
 }
 
+function isInputError(){
+    if(mode.value){
+        if(criteria.value == "zip")
+            return !values.value.zip.isValid
+        else if(criteria.value == "phone")
+            return !values.value.phone.isValid
+        else return false
+    }else{
+        return !values.value.zip.isValid || !values.value.phone.isValid
+    }
+}
+function currentType(){
+    if(criteria.value === "zip")
+        return "number"
+    return ""
+}
 function getType(inputType){
     if(inputType === undefined)inputType = ''
     if(shouldBeDisabled())inputType = inputType + 'disabled'
@@ -132,10 +158,23 @@ function getType(inputType){
 function shouldBeDisabled(){
     return isLoading.value
 }
+
+function checkZip(){
+    values.value.zip.check()
+}
+function checkPhone(){
+    values.value.phone.check()
+}
+function checkSelected(){
+    if(criteria.value === "zip")
+        checkZip()
+    else if(criteria.value === "phone")
+        checkPhone()
+}
 </script>
 
 <template>
-    <Userlist v-if="displayData" :data="data" :page="page" @page="setPage" :returnable="true" :email='props.email' :id='props.id' :privileges='props.privileges' :isLoading="isLoading" @return="back" @selectedself="$emit('selectedself')" @sort="sort" @reverse="reverse" @updated="updatedOther" @deleted="deleted" @reload="reload"/>
+    <Userlist v-if="displayData" :data="data" :page="page" @page="setPage" :returnable="true" :email='props.email' :id='props.id' :privileges='props.privileges' :isLoading="isLoading" @return="back" @selectedself="emit('selectedself')" @sort="sort" @reverse="reverse" @updated="updatedOther" @deleted="deleted" @reload="reload"/>
     <div v-else class="content form">
         <div v-if="mode" class="input">
             <select class="input-dyn-label" v-model="criteria">
@@ -145,14 +184,14 @@ function shouldBeDisabled(){
                 <option value="place">Ort</option>
                 <option value="phone">Telefon</option>
             </select>
-            <input class="input-input" v-model='values[criteria]' :disabled='isLoading'/>
+            <input :class="isInputError() ? 'input-input input-invalid' : 'input-input'" v-model='values[criteria].value' :disabled='isLoading' :type='currentType()' @focusout="checkSelected"/>
         </div>
         <template v-else>
-            <Input label='E-Mail' v-model='values.email' :type='getType()'/>
-            <Input label='Name' v-model='values.name' :type='getType()'/>
-            <Input label='PLZ' v-model='values.zip' :type='getType()'/>
-            <Input label='Ort' v-model='values.place' :type='getType()'/>
-            <Input label='Telefon' v-model='values.phone' :type='getType()'/>
+            <Input label='E-Mail' v-model='values.email.value' :type='getType()'/>
+            <Input label='Name' v-model='values.name.value' :type='getType()'/>
+            <Input label='PLZ' v-model='values.zip.value' :type='getType("number")' :invalid="!values.zip.isValid" @focusout="checkZip"/>
+            <Input label='Ort' v-model='values.place.value' :type='getType()'/>
+            <Input label='Telefon' v-model='values.phone.value' :type='getType()' :invalid="!values.phone.isValid" @focusout="checkPhone"/>
         </template>
         <Error :err="ERR"/>
         <div v-if="!isLoading" class="button-row">

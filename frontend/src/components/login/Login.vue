@@ -102,7 +102,7 @@ function checkPassword(){password.value.check()}
             
             <Error :err="ERR"/>
                         
-            <button v-if='!isLoading' class='form-button' @focusin="tryLogin">Login</button>
+            <button v-if='!isLoading' class='form-button' @click="tryLogin">Login</button>
             <div v-else class='loader'></div>
             
             <div>

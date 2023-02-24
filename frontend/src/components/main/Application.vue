@@ -4,6 +4,7 @@ import axios from 'axios'
 import Userdata from '../Userdata.vue'
 import Userlist from './Userlist.vue'
 import Usersearch from './Usersearch.vue'
+import PermissionCheck from '../PermissionCheck.vue'
 import Data from '../../util/Data.js'
 import Errors from '../../util/Errors.js'
 
@@ -20,8 +21,10 @@ const SCREEN_WELCOME = 0
 const SCREEN_MYDATA = 1
 const SCREEN_LISTPERSONS = 2
 const SCREEN_SEARCH = 3
+const SCREEN_LOGIN = 4
 
 const contentScreen = ref(SCREEN_WELCOME)
+let lastScreen
 
 const user = ref(props.user)
 
@@ -90,7 +93,12 @@ function setPage(newPage){
     page.value = newPage;
 }
 
+function cancelLogout(){
+    contentScreen.value = lastScreen
+}
+
 function setScreen(screen){
+    lastScreen = contentScreen.value
     contentScreen.value = screen
 }
 
@@ -114,7 +122,7 @@ function getSelectorClass(screen){
             <div :class='getSelectorClass(SCREEN_SEARCH)' @click='setScreen(SCREEN_SEARCH)'>
                 <label>Search</label>
             </div>
-            <div class='selector' @click='$emit("loggedout")'>
+            <div :class='getSelectorClass(SCREEN_LOGIN)' @click='setScreen(SCREEN_LOGIN)'>
                 <label>Logout</label>
             </div>
         </div>
@@ -124,5 +132,6 @@ function getSelectorClass(screen){
         <Userdata v-else-if='contentScreen === SCREEN_MYDATA' :user='user' :privileges='user.privileges' @updated="updated"/>
         <Userlist v-else-if='contentScreen === SCREEN_LISTPERSONS' :data='data' :page='page' :email='user.email' :id='user.id' :privileges='user.privileges' :isLoading="isLoading" :err="ERR" @selectedself="setScreen(SCREEN_MYDATA)" @sort="sort" @reverse="reverse" @page="setPage" @updated="updatedOther" @deleted="deleted" @reload="reload"/>
         <Usersearch v-else-if='contentScreen === SCREEN_SEARCH' :email='user.email' :id='user.id' :privileges='user.privileges' @selectedself="setScreen(SCREEN_MYDATA)" @updatedOther="updatedOther" @deleted="deleted"/>
+        <PermissionCheck v-else @cancel="cancelLogout" @accept="$emit('loggedout')">Wollen Sie sich wirklich ausloggen?</PermissionCheck>
     </div>
 </template>
