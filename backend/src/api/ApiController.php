@@ -7,6 +7,14 @@
     const PRIVILEGES_USER = 1;
     const PRIVILEGES_SUPER = 2;
     const PRIVILEGES_ADMIN = 3;
+    
+    function formatPhone($phone){
+        $formattedPhone = str_replace(' ', '', $phone);
+        $formattedPhone = str_replace('-', '', $formattedPhone);
+        if(mb_substr($formattedPhone, 0, 1) == '+')
+            $formattedPhone = mb_substr($formattedPhone, 1);
+        return $formattedPhone;
+    }
 
     class ApiController extends Controller{
         
@@ -26,11 +34,24 @@
                 return;
             }
 
+            $user["id"] = loginUser($this->body["email"]);
+
             unset($user["password"]);
             
             header('content-type: application/json; charset=utf-8');
             http_response_code(200);
             echo json_encode($user);
+        }
+        function deleteLogin(){
+            $id = getParam("id");
+
+            if(!logoutUser(getParam("id"))){
+                
+                http_response_code(500);
+                return;
+            }
+            
+            http_response_code(200);
         }
 
         function getAccount(){
@@ -63,6 +84,7 @@
 
             #save to database
             $this->body["password"] = password_hash($this->body["password"], PASSWORD_DEFAULT);
+            $this->body["phone"] = formatPhone($this->body["phone"]);
             #TODO use saveUserId
             if(!saveUserId($this->body, $key)){
                 http_response_code(500);
@@ -82,7 +104,10 @@
                 http_response_code(401);
                 return;
             }
-            
+
+            if($this->hasParam("phone"))
+                $this->body["phone"] = formatPhone($this->body["phone"]);
+
             $target;
             $discarded = false;
             if($this->hasParam("targetemail")

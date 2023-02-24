@@ -1,4 +1,5 @@
 <?php
+
 class Controller
 {
     protected $body;
@@ -6,6 +7,7 @@ class Controller
     function __construct(){
         parse_str(file_get_contents('php://input'), $this->body);
         foreach($_GET as $param => $value){
+            $value = trim($value);
             $this->body[$param] = $value;
         }      
     }

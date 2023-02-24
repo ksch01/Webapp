@@ -16,14 +16,14 @@ if ($conn -> query($sql) === true){
 }
 
 $sql = "CREATE TABLE IF NOT EXISTS `userdata` (
-    `id` VARCHAR(17) PRIMARY KEY, 
-    `email` VARCHAR(64) NOT NULL UNIQUE, 
+    `email` VARCHAR(64) PRIMARY KEY , 
+    `id` VARCHAR(21) UNIQUE , 
     `password` VARCHAR(60) NOT NULL , 
     `name` VARCHAR(64) NOT NULL , 
     `zip` MEDIUMINT UNSIGNED NOT NULL , 
     `place` VARCHAR(64) NOT NULL , 
     `phone` VARCHAR(15) NOT NULL , 
-    `privileges` TINYINT UNSIGNED NOT NULL 
+    `privileges` TINYINT UNSIGNED NOT NULL
 );";
 if($conn -> query($sql) === false){
     echo "Error creating table: " . $conn->error;
@@ -98,7 +98,7 @@ function updateUser($user){
     return true;
 }
 
-const KEY_RANDOM_DIGITS = 4;
+const KEY_RANDOM_DIGITS = 8;
 function genKey(){
     $rand = random_bytes(ceil(KEY_RANDOM_DIGITS / 2));
     return uniqid() . bin2hex($rand);
@@ -121,6 +121,32 @@ function getUserByEmail($email){
             return $result->fetch_assoc();
         }
     }
+}
+function loginUser($email){
+    global $conn;
+    $sessionId = genKey();
+    $sql = "UPDATE userdata SET `id`='$sessionId' WHERE `email`='$email'";
+    $result = $conn->query($sql);
+
+    if($result === false){
+
+        echo "Error updating session: " . $conn->error;
+        return false;
+    }
+
+    return $sessionId;
+}
+function logoutUser($id){
+    global $conn;
+    $sql = "UPDATE userdata SET `id`=null WHERE `id`='$id'";
+    $result = $conn->query($sql);
+
+    if($result === false){
+
+        echo "Error closing session: " . $conn->error;
+        return false;
+    }
+    return true;
 }
 
 function getUser($id){
