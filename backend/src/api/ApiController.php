@@ -96,8 +96,8 @@
         function putAccount(){
             $this->requireOneOfParams(["email", "name", "zip", "place", "phone", "password", "privileges"]);
 
-            $invokerid = $this->getParam("id");
-            $invoker = getUser($invokerid);
+            $invokerId = $this->getParam("id");
+            $invoker = getUser($invokerId);
             if($invoker === false){
                 http_response_code(401);
                 return;
@@ -109,7 +109,7 @@
             $target;
             $discarded = false;
             if($this->hasParam("targetemail")
-                && !($invoker["email"] === $this->getParam("targetemail"))){
+                && !($invoker["email"] === $this->body["targetemail"])){
                 
                 if($invoker["privileges"] == PRIVILEGES_SUPER){
                     $this->requireOneOfParams(["email", "name", "zip", "place", "phone"], 403);
@@ -119,16 +119,18 @@
                     return;
                 }
 
-                $target = getUserByEmail($this->getParam("targetemail"));
+                $target = getUserByEmail($this->body["targetemail"]);
                 if($target === false){
                     http_response_code(404);
                     return;
                 }
+
             }else{
                 $target = $invoker;
             }
 
-            $this->body["id"] = $target["id"];
+            unset($this->body["id"]);
+            $this->body["targetemail"] = $target["email"];
             if(updateUser($this->body)){
                 if($discarded){
                     http_response_code(206);

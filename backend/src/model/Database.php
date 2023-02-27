@@ -1,5 +1,6 @@
 <?php
 
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $conn = new mysqli(mysqlAddress, mysqlUsername, mysqlPassword);
 
 if($conn->connect_errno){
@@ -35,17 +36,19 @@ function saveUser($user){
 }
 function saveUserId($user, $id){
     global $conn;
-    $email = $user["email"];
-    $password = $user["password"];
-    $name = $user["name"];
-    $zip = $user["zip"];
-    $place = $user["place"];
-    $phone = $user["phone"];
 
-    $sql = "INSERT INTO userdata (`id`, `email`, `password`, `name`, `zip`, `place`, `phone`, `privileges`)
-    VALUES ('$id', '$email', '$password', '$name', '$zip', '$place', '$phone', '0')";
+    $query = $conn->prepare("INSERT INTO userdata (`id`, `email`, `password`, `name`, `zip`, `place`, `phone`, `privileges`)
+    VALUES (?, ?, ?, ?, ?, ?, ?, '0')");
+    $query->bind_param("ssssisi", 
+        $id, 
+        $user["email"], 
+        $user["password"], 
+        $user["name"], 
+        $user["zip"], 
+        $user["place"], 
+        $user["phone"]);
 
-    if($conn->query($sql) === false){
+    if($query->execute() === false){
         echo "Error saving user: " . $conn->error;
         return false;
     }
@@ -54,82 +57,75 @@ function saveUserId($user, $id){
 
 function updateUser($user){
     global $conn;
-    $id = $user["id"];
-    $email = null;
-    $password = null;
-    $name = null;
-    $zip = null;
-    $place = null;
-    $phone = null;
-    $privileges = null;
 
-    if(array_key_exists("email", $user))
-        $email = $user["email"];
-    if(array_key_exists("password", $user))
-        $password = $user["password"];
-    if(array_key_exists("name", $user))
-        $name = $user["name"];
-    if(array_key_exists("zip", $user))
-        $zip = $user["zip"];
-    if(array_key_exists("place", $user))
-        $place = $user["place"];
-    if(array_key_exists("phone", $user))
-        $phone = $user["phone"];
-    if(array_key_exists("privileges", $user))
-        $privileges = $user["privileges"];
+    $targetemail = &$user["targetemail"];
+    unset($user["targetemail"]);
 
-    $sql = "UPDATE userdata SET";
-    if($email !== null)$sql = $sql . ", email='$email'";
-    if($password !== null)$sql = $sql . ", password='$password'";
-    if($name !== null)$sql = $sql . ", name='$name'";
-    if($zip !== null)$sql = $sql . ", zip='$zip'";
-    if($place !== null)$sql = $sql . ", place='$place'";
-    if($phone !== null)$sql = $sql . ", phone='$phone'";
-    if($privileges !== null)$sql = $sql . ", privileges='$privileges'";
-    $sql = $sql . " WHERE id='$id'";
+    $sqlParams = "";
+    $paramTypes = "";
+    $params = [&$paramTypes];
 
-    $pos = strpos($sql,",");
-    $sql = substr_replace($sql, ' ', $pos, 1);
+    $index = 1;
 
-    if($conn->query($sql) === false){
+    foreach($user as $key => $value){
+        if($key === "zip" || $key === "phone" || $key === "privileges"){
+            $paramType = "i";
+        }else{
+            $paramType = "s";
+        }
+        $paramTypes = $paramTypes . $paramType;
+
+        $params[$index] = &$value;
+
+        if(!empty($sqlParams)){
+            $sqlParams = $sqlParams . ", ";
+        }
+        $sqlParams = $sqlParams . $key . "=?";
+
+        $index++;
+    }
+
+    $sql = "UPDATE userdata SET " . $sqlParams . " WHERE email=?";
+    $paramTypes = $paramTypes . "s";
+    $params[$index] = &$targetemail;
+
+    $query = $conn->prepare($sql);
+    call_user_func_array([$query, "bind_param"], $params);
+
+    if($query->execute() === false){
         echo "Error updating user: " . $conn->error;
         return false;
     }
     return true;
 }
 
-const KEY_RANDOM_DIGITS = 8;
-function genKey(){
-    $rand = random_bytes(ceil(KEY_RANDOM_DIGITS / 2));
-    return uniqid() . bin2hex($rand);
-}
-
 function getUserByEmail($email){
     global $conn;
-    $sql = "SELECT * FROM userdata WHERE email='$email'";
-    $result = $conn->query($sql);
 
-    if($result === false){
+    $query = $conn->prepare("SELECT * FROM userdata WHERE email=?");
+    $query->bind_param("s", $email);
 
+    if($query->execute() === false){
         echo "Error getting user: " . $conn->error;
         return false;
-    }else{
+    }
 
-        if($result->num_rows == 0){
-            return false;
-        }else{
-            return $result->fetch_assoc();
-        }
+    $result = $query->get_result();
+
+    if($result->num_rows == 0){
+        return false;
+    }else{
+        return $result->fetch_assoc();
     }
 }
 function loginUser($email){
     global $conn;
+
     $sessionId = genKey();
-    $sql = "UPDATE userdata SET `id`='$sessionId' WHERE `email`='$email'";
-    $result = $conn->query($sql);
+    $query = $conn->prepare("UPDATE userdata SET `id`=? WHERE `email`=?");
+    $query->bind_param("ss", $sessionId, $email);
 
-    if($result === false){
-
+    if($query->execute() === false){
         echo "Error updating session: " . $conn->error;
         return false;
     }
@@ -138,11 +134,11 @@ function loginUser($email){
 }
 function logoutUser($id){
     global $conn;
-    $sql = "UPDATE userdata SET `id`=null WHERE `id`='$id'";
-    $result = $conn->query($sql);
 
-    if($result === false){
+    $query = $conn->prepare("UPDATE userdata SET `id`=null WHERE `id`=?");
+    $query->bind_param("s", $id);
 
+    if($query->execute() === false){
         echo "Error closing session: " . $conn->error;
         return false;
     }
@@ -151,55 +147,53 @@ function logoutUser($id){
 
 function getUser($id){
     global $conn;
-    $sql = "SELECT * FROM userdata WHERE id='$id'";
-    $result = $conn->query($sql);
 
-    if($result === false){
+    $query = $conn->prepare("SELECT * FROM userdata WHERE `id`=?");
+    $query->bind_param("s", $id);
 
+    if($query->execute() === false){
         echo "Error getting user: " . $conn->error;
         return false;
-    }else{
-
-        if($result->num_rows == 0){
-            return false;
-        }else{
-            return $result->fetch_assoc();
-        }
     }
-}
-function activateUser($key){
-    global $conn;
-    $id = genKey();
-    $sql = "UPDATE userdata SET `id`='$id', `privileges`='1' WHERE `id`='$key'";
-    $result = $conn->query($sql);
 
-    if($result === false){
-        
-        echo "Error activating user: " . $conn->error;
+    $result = $query->get_result();
+    if($result->num_rows == 0){
         return false;
     }else{
-
-        return $id;
+        return $result->fetch_assoc();
     }
+}
+
+function activateUser($key){
+    global $conn;
+
+    $id = genKey();
+    $query = $conn->prepare("UPDATE userdata SET `id`=?, `privileges`='1' WHERE `id`=?");
+    $query->bind_param("ss", $id, $key);
+
+    if($query->execute() === false){
+        echo "Error activating user: " . $conn->error;
+        return false;
+    }
+    return $id;
 }
 
 function deleteUserByEmail($email){
     global $conn;
-    $sql = "DELETE FROM userdata WHERE `email`='$email'";
-    $result = $conn->query($sql);
 
-    if($result === false){
+    $query = $conn->prepare("DELETE FROM userdata WHERE `email`=?");
+    $query->bind_param("s", $email);
 
+    if($query->execute() === false){
         echo "Error deleting user: " . $conn->error;
         return false;
-    }else{
-
-        return true;
     }
+    return true;
 }
 
 function getUsers(){
     global $conn;
+
     $sql = "SELECT `email`, `name`, `zip`, `place`, `phone`, `privileges` FROM userdata";
     $result = $conn->query($sql);
 
@@ -219,27 +213,55 @@ function getUsers(){
 
 function searchUsers($query){
     global $conn;
-    $sql = "SELECT `email`, `name`, `zip`, `place`, `phone`, `privileges` FROM userdata WHERE";
-    $and = "";
-    foreach($query as $attribute => $value){
-        $sql = $sql . $and . " `$attribute` LIKE '%$value%'";
-        if($and == "")
-            $and = "AND";
-    }
-    $result = $conn->query($sql);
 
-    if($result === false){
-        
+    $sqlParams = "";
+    $paramTypes = "";
+    $params = [&$paramTypes];
+
+    $index = 1;
+
+    foreach($query as $key => $value){
+        if($key === "zip" || $key === "phone" || $key === "privileges"){
+            $paramType = "i";
+        }else{
+            $paramType = "s";
+        }
+        $paramTypes = $paramTypes . $paramType;
+
+        $value = "%" . $value . "%";
+        $params[$index] = &$value;
+
+        if(!empty($sqlParams)){
+            $sqlParams = $sqlParams . " AND ";
+        }
+        $sqlParams = $sqlParams . $key . " LIKE ?";
+
+        $index++;
+    }
+
+    $sql = "SELECT `email`, `name`, `zip`, `place`, `phone`, `privileges` FROM userdata WHERE " . $sqlParams;
+
+    $query = $conn->prepare($sql);
+    call_user_func_array([$query, "bind_param"], $params);
+
+    if($query->execute() === false){
         echo "Error searching users: " . $conn->error;
         return false;
-    }else{
-
-        $users = [];
-        while($row = $result->fetch_assoc()){
-            array_push($users, $row);
-        }
-        return $users;
     }
+
+    $result = $query->get_result();
+
+    $users = [];
+    while($row = $result->fetch_assoc()){
+        array_push($users, $row);
+    }
+    return $users;
+}
+
+const KEY_RANDOM_DIGITS = 8;
+function genKey(){
+    $rand = random_bytes(ceil(KEY_RANDOM_DIGITS / 2));
+    return uniqid() . bin2hex($rand);
 }
 
 function closeDatabaseConnection(){
