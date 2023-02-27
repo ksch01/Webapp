@@ -40,7 +40,7 @@ export function phone(phone){
     phone = phone.replace(/\s+/g, "")
     phone = phone.replace("-","")
     if(phone.charAt(0) === '+')phone = phone.substring(1)
-    return phone.length >= 11 && phone.length <= 12 && !isNaN(phone)
+    return phone.length >= 9 && phone.length <= 12 && !isNaN(phone)
 }
 export function phoneMax(phone){
     if(typeof phone !== 'string')return false

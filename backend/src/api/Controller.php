@@ -67,7 +67,7 @@ class Controller
         if($this->hasParam($param)){
             return $this->body[$param];
         }else{
-            echo("Param " . $param . "was required but didn't exist.");
+            echo("Param " . $param . " was required but didn't exist.");
             http_response_code($statusOnFail);
             exit;
         }

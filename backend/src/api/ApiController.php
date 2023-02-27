@@ -43,9 +43,7 @@
             echo json_encode($user);
         }
         function deleteLogin(){
-            $id = getParam("id");
-
-            if(!logoutUser(getParam("id"))){
+            if(!logoutUser($this->getParam("id"))){
                 
                 http_response_code(500);
                 return;
