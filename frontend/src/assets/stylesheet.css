@@ -168,7 +168,6 @@ tr:nth-child(even) {
 }
 .selected {
     background-color: var(--secondary-step-color);
-    color: var(--highlighted-text-color);
 }
 
 .section-content {
