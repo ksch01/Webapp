@@ -20,7 +20,6 @@ export function name(name){
 }
 
 export function zip(zip){
-    if(typeof zip !== 'string')return false
     let zipInt = parseInt(zip)
     return !isNaN(zip) &&
         zipInt >= 0 && 
