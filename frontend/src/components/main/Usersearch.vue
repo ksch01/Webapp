@@ -62,16 +62,21 @@ function search(){
     requestErrorServer.value = false
     requestErrorUnreachable.value = false
 
-    let search = {
-        email: {value: values.value.email.value},
-        name: {value: values.value.name.value},
-        zip: {value: values.value.zip.value},
-        place: {value: values.value.place.value},
-        phone: {value: values.value.phone.value}
-    }
+    let search = {}
+
     if(mode.value == MODE_ONE_LINE){
-        search = {}
         search[criteria.value] = values.value[criteria.value].value
+    }else{
+        if(values.value.email.value !== "")
+            search["email"] = values.value.email.value
+        if(values.value.name.value !== "")
+            search["name"] = values.value.name.value
+        if(values.value.zip.value !== "")
+            search["zip"] = values.value.zip.value
+        if(values.value.place.value !== "")
+            search["place"] = values.value.place.value
+        if(values.value.phone.value !== "")
+            search["phone"] = values.value.phone.value
     }
 
     const params = new URLSearchParams()

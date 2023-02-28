@@ -75,7 +75,7 @@ function updateUser($user){
         }
         $paramTypes = $paramTypes . $paramType;
 
-        $params[$index] = &$value;
+        $params[$index] = &$user[$key];
 
         if(!empty($sqlParams)){
             $sqlParams = $sqlParams . ", ";
@@ -227,8 +227,8 @@ function searchUsers($query){
         }
         $paramTypes = $paramTypes . $paramType;
 
-        $value = "%" . $value . "%";
-        $params[$index] = &$value;
+        $query[$key] = "%" . $query[$key] . "%";
+        $params[$index] = &$query[$key];
 
         if(!empty($sqlParams)){
             $sqlParams = $sqlParams . " AND ";
