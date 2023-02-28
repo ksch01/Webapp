@@ -167,9 +167,8 @@ function getUser($id){
 function activateUser($key){
     global $conn;
 
-    $id = genKey();
-    $query = $conn->prepare("UPDATE userdata SET `id`=?, `privileges`='1' WHERE `id`=?");
-    $query->bind_param("ss", $id, $key);
+    $query = $conn->prepare("UPDATE userdata SET `id`=null, `privileges`='1' WHERE `id`=?");
+    $query->bind_param("s", $key);
 
     if($query->execute() === false){
         echo "Error activating user: " . $conn->error;

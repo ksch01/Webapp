@@ -1,18 +1,22 @@
 <?php
-	#test
-	#allow cross origin for development
-	header("Access-Control-Allow-Origin: http://localhost:5173");
-	if($_SERVER['REQUEST_METHOD'] === "OPTIONS"){
-		header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
-		header("Access-Control-Allow-Headers: content-type");
-	}
-
 	include 'config.php';
 
 	$configPath = 'config.json';
 	$config = json_decode(file_get_contents($configPath));
 	foreach($config as $key => $value){
 		define($key, $value);
+	}
+
+	#allow cross origin
+	if (isset($_SERVER['HTTP_ORIGIN'])){
+		#header("Access-Control-Allow-Origin: " . frontendAddress);
+		header("Access-Control-Allow-Origin: " . $_SERVER['HTTP_ORIGIN']);
+		if($_SERVER['REQUEST_METHOD'] === "OPTIONS"){
+			header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
+			header("Access-Control-Allow-Headers: content-type");
+			http_response_code(204);
+			exit;
+		}
 	}
 
 	function getControllerFunction(String $pathElement){
@@ -23,11 +27,6 @@
 	}
 
 	$pathElements = explode('/', $_SERVER['REQUEST_URI']);
-
-	if($_SERVER['REQUEST_METHOD'] == 'OPTIONS'){
-		http_response_code(204);
-		exit;
-	}
 
 	if(!array_key_exists(3,$pathElements)){
 

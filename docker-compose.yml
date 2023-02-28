@@ -1,11 +1,30 @@
 services:
-  web:
+  api:
     container_name: backend
     build: ./backend
     ports:
       - 80:80
+    depends_on:
+      - db
+    links:
+      - "db:database"
   frontend:
     container_name: frontend
     build: ./frontend
     ports:
       - 8080:8080
+  db:
+    container_name: database
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 'rootpassword'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - mysql-vol:/var/lib/mysql
+
+volumes:
+  mysql-vol:

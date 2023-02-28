@@ -1,5 +1,5 @@
 {
-    "frontendAddress": "http://localhost:5173",
+    "frontendAddress": "http://localhost:8080",
 
     "smtpAddress": "smtp.gmail.com",
     "smtpPort": 587,
@@ -7,7 +7,7 @@
     "mailUsername": "----------------",
     "mailPassword": "----------------",
 
-    "mysqlAddress": "localhost",
+    "mysqlAddress": "database",
     "mysqlUsername": "root",
-    "mysqlPassword": ""
+    "mysqlPassword": "rootpassword"
 }
