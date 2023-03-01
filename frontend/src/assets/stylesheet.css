@@ -106,7 +106,7 @@ th:hover {
     cursor: default;
 }
 td {
-    border-left: 1px dashed var(--secondary-color);
+    border-left: 1px solid var(--button-color);
 }
 td:first-child {
     border: none;

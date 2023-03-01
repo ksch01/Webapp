@@ -24,7 +24,7 @@ $sql = "CREATE TABLE IF NOT EXISTS `userdata` (
     `zip` MEDIUMINT UNSIGNED NOT NULL , 
     `place` VARCHAR(64) NOT NULL , 
     `phone` VARCHAR(15) NOT NULL , 
-    `privileges` TINYINT UNSIGNED NOT NULL
+    `group` VARCHAR(16) NOT NULL
 );";
 if($conn -> query($sql) === false){
     echo "Error creating table: " . $conn->error;
@@ -37,8 +37,8 @@ function saveUser($user){
 function saveUserId($user, $id){
     global $conn;
 
-    $query = $conn->prepare("INSERT INTO userdata (`id`, `email`, `password`, `name`, `zip`, `place`, `phone`, `privileges`)
-    VALUES (?, ?, ?, ?, ?, ?, ?, '0')");
+    $query = $conn->prepare("INSERT INTO userdata (`id`, `email`, `password`, `name`, `zip`, `place`, `phone`, `group`)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')");
     $query->bind_param("ssssisi", 
         $id, 
         $user["email"], 
@@ -68,7 +68,7 @@ function updateUser($user){
     $index = 1;
 
     foreach($user as $key => $value){
-        if($key === "zip" || $key === "phone" || $key === "privileges"){
+        if($key === "zip"){
             $paramType = "i";
         }else{
             $paramType = "s";
@@ -80,7 +80,7 @@ function updateUser($user){
         if(!empty($sqlParams)){
             $sqlParams = $sqlParams . ", ";
         }
-        $sqlParams = $sqlParams . $key . "=?";
+        $sqlParams = $sqlParams . "`" . $key . "`=?";
 
         $index++;
     }
@@ -102,11 +102,30 @@ function updateUser($user){
 function getUserByEmail($email){
     global $conn;
 
-    $query = $conn->prepare("SELECT * FROM userdata WHERE email=?");
+    $query = $conn->prepare("SELECT * FROM userdata WHERE userdata.email=?");
     $query->bind_param("s", $email);
 
     if($query->execute() === false){
         echo "Error getting user: " . $conn->error;
+        return false;
+    }
+
+    $result = $query->get_result();
+
+    if($result->num_rows == 0){
+        return false;
+    }else{
+        return $result->fetch_assoc();
+    }
+}
+function getPrivileges($privileges){
+    global $conn;
+
+    $query = $conn->prepare("SELECT `login`, `edit_own_cred`, `edit_own_pass`, `edit_own_priv`, `edit_oth_cred`, `edit_oth_pass`, `edit_oth_priv`, `delete` FROM usergroups WHERE `name`=?");
+    $query->bind_param("s", $privileges);
+
+    if($query->execute() === false){
+        echo "Error getting privileges: " . $conn->error;
         return false;
     }
 
@@ -167,7 +186,7 @@ function getUser($id){
 function activateUser($key){
     global $conn;
 
-    $query = $conn->prepare("UPDATE userdata SET `id`=null, `privileges`='1' WHERE `id`=?");
+    $query = $conn->prepare("UPDATE userdata SET `id`=null, `group`='user' WHERE `id`=?");
     $query->bind_param("s", $key);
 
     if($query->execute() === false){
@@ -193,7 +212,7 @@ function deleteUserByEmail($email){
 function getUsers(){
     global $conn;
 
-    $sql = "SELECT `email`, `name`, `zip`, `place`, `phone`, `privileges` FROM userdata";
+    $sql = "SELECT `email`, `name`, `zip`, `place`, `phone`, `group` FROM userdata";
     $result = $conn->query($sql);
 
     if($result === false){
@@ -220,7 +239,7 @@ function searchUsers($query){
     $index = 1;
 
     foreach($query as $key => $value){
-        if($key === "zip" || $key === "phone" || $key === "privileges"){
+        if($key === "zip"){
             $paramType = "i";
         }else{
             $paramType = "s";
@@ -238,7 +257,7 @@ function searchUsers($query){
         $index++;
     }
 
-    $sql = "SELECT `email`, `name`, `zip`, `place`, `phone`, `privileges` FROM userdata WHERE " . $sqlParams;
+    $sql = "SELECT `email`, `name`, `zip`, `place`, `phone`, `group` FROM userdata WHERE " . $sqlParams;
 
     $query = $conn->prepare($sql);
     call_user_func_array([$query, "bind_param"], $params);

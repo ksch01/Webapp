@@ -22,9 +22,10 @@
     const MODE_SIGNUP = 4
     const MODE_STRING_SIGNUP = "signup"
 
-    const PRIVILEGES_USER = "2"
-    const PRIVILEGES_SUPER = "3"
-    const PRIVILEGES_ADMIN = "4"
+    const PRIVILEGES_PENDING = "pending"
+    const PRIVILEGES_USER = "user"
+    const PRIVILEGES_SUPER = "superuser"
+    const PRIVILEGES_ADMIN = "admin"
 
     const ERR = new Errors()
     ERR.addError("Bitte prüfen Sie die Eingaben in den markierten Feldern.",
@@ -99,7 +100,7 @@
         place.value.setAndCheck(props.user.place)
         phone.value.setAndCheck(props.user.phone)
 
-        privileges.value = props.user.privileges
+        privileges.value = props.user.group
 
         password.value.setAndCheck('')
         passwordR.value.setAndCheck('')
@@ -153,8 +154,8 @@
         else if(mode.value === MODE_EDIT_OTHER){
             params.append('id', props.invoker)
             params.append('targetemail', props.user.email)
-            if(privileges.value != props.user.privileges)
-                params.append('privileges', privileges.value)
+            if(privileges.value != props.user.group)
+                params.append('group', privileges.value)
         }
 
         isLoading.value = true
@@ -178,7 +179,7 @@
                 zip: zip.value.value,
                 place: place.value.value,
                 phone: phone.value.value,
-                privileges: privileges.value
+                group: privileges.value
             })
             if(mode.value === MODE_EDIT_OWN)
                 mode.value = MODE_READ
@@ -277,10 +278,39 @@
             props.user.zip === zip.value.value &&
             props.user.place === place.value.value &&
             props.user.phone === phone.value.value &&
-            props.user.privileges === privileges.value && 
+            props.user.group === privileges.value && 
             password.value.value === '' && 
             passwordR.value.value === ''
         ) && validInput()
+    }
+
+    function hasEditPriv(){
+        if(mode.value === MODE_READ)
+            return props.privileges.edit_own_cred
+        else if(mode.value === MODE_OBSERVE)
+            return props.privileges.edit_oth_cred
+        return false
+    }
+    function hasEditPassPriv(){
+        if(mode.value === MODE_SIGNUP)
+            return true;
+        else if(mode.value === MODE_EDIT_OWN)
+            return props.privileges.edit_own_pass;
+        else if(mode.value === MODE_EDIT_OTHER)
+            return props.privileges.edit_oth_pass;
+        return false;
+    }
+    function hasEditPrivPriv(){
+        if(mode.value === MODE_EDIT_OWN)
+            return props.privileges.edit_own_priv;
+        else if(mode.value === MODE_EDIT_OTHER)
+            return props.privileges.edit_oth_priv;
+        return false;
+    }
+    function hasDeletePriv(){
+        if(mode.value === MODE_EDIT_OTHER)
+            return props.privileges.delete;
+        return false;
     }
 
     function checkEmail(){email.value.check()}
@@ -301,10 +331,8 @@
     <div v-else class='content form'>
         <div v-if='mode <= MODE_EDIT_OTHER' class='userdata-heading'>
             <h1>{{ (mode === MODE_OBSERVE || mode === MODE_EDIT_OTHER) ? name.value : "My Data"}}</h1>
-            <template v-if='mode <= MODE_READ'>
-                <button v-if='mode === MODE_READ || props.privileges > 1' class='edit' @click='edit'>&#9998</button>
-            </template>
-            <button v-else-if='mode <= MODE_EDIT_OTHER && !isLoading' class='edit' @click='cancelUpdate'>&#10006</button>
+            <button v-if='hasEditPriv()' class='edit' @click='edit'>&#9998</button>
+            <button v-else-if='mode == MODE_EDIT_OTHER || mode == MODE_EDIT_OWN && !isLoading' class='edit' @click='cancelUpdate'>&#10006</button>
         </div>
 
         <Input label='E-Mail' :invalid='!email.isValid' v-model='email.value' :type='getType("email")' @focusout='checkEmail'/>
@@ -313,17 +341,17 @@
         <Input label='Ort' :invalid='!place.isValid' v-model='place.value' :type='getType()' @focusout='checkPlace'/>
         <Input label='Telefon' :invalid='!phone.isValid' v-model='phone.value' :type='getType("tel")' @focusout='checkPhone'/>
 
-        <template v-if='mode === MODE_EDIT_OWN || (mode === MODE_EDIT_OTHER && props.privileges >= PRIVILEGES_ADMIN) || mode === MODE_SIGNUP'>
-            <div v-if='mode <= MODE_EDIT_OTHER && (mode !== MODE_EDIT_OWN || props.privileges >= PRIVILEGES_ADMIN)' class = "input">
-                <label class="input-label">Rechte</label>
-                <select class="input-select" v-model="privileges" :disabled="shouldBeDisabled()">
-                    <option disabled :value="0">None</option>
-                    <option :value="PRIVILEGES_USER">User</option>
-                    <option :value="PRIVILEGES_SUPER">Superuser</option>
-                    <option :value="PRIVILEGES_ADMIN">Admin</option>
-                </select>
-            </div>
-            
+        <div v-if='hasEditPrivPriv()' class = "input">
+            <label class="input-label">Rechte</label>
+            <select class="input-select" v-model="privileges" :disabled="shouldBeDisabled()">
+                <option disabled :value="PRIVILEGES_PENDING">None</option>
+                <option :value="PRIVILEGES_USER">User</option>
+                <option :value="PRIVILEGES_SUPER">Superuser</option>
+                <option :value="PRIVILEGES_ADMIN">Admin</option>
+            </select>
+        </div>
+
+        <template v-if='hasEditPassPriv()'>
             <Input class='password' label='Passwort' :invalid='!password.isValid' v-model='password.value' :type='getType("password")' @focusout='checkPassword'/>
             <Input label='Wiederholen' :invalid='!passwordR.isValid' v-model='passwordR.value' :type='getType("password")' @focusout='checkPasswordR'/>
         </template>
@@ -342,7 +370,7 @@
             <div v-else-if='mode >= MODE_EDIT_OWN' class='button-row'>
                 <button v-if='mode == MODE_EDIT_OTHER' class='form-button' @click="$emit('returned')">&#60</button>
                 <button class='form-button' :disabled="!validUpdate()" @click='update'>Update</button>
-                <button v-if='mode == MODE_EDIT_OTHER && props.privileges >= PRIVILEGES_ADMIN' class='form-button delete' @click='checkErase'>Löschen</button>
+                <button v-if='hasDeletePriv()' class='form-button delete' @click='checkErase'>Löschen</button>
             </div>
         </template>
 

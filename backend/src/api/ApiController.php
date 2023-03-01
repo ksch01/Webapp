@@ -3,10 +3,8 @@
     require __DIR__ . '/../model/Database.php';
     require 'Mailer.php';
 
-    const PRIVILEGES_NONE = 1;
-    const PRIVILEGES_USER = 2;
-    const PRIVILEGES_SUPER = 3;
-    const PRIVILEGES_ADMIN = 4;
+    const PRIVILEGES_SUPER = "superuser";
+    const PRIVILEGES_ADMIN = "admin";
     
     function formatPhone($phone){
         $formattedPhone = str_replace(' ', '', $phone);
@@ -23,13 +21,12 @@
 
             $user = getUserByEmail($this->body["email"]);
             if($user === false || !password_verify($this->body["password"], $user["password"])){
-                
                 http_response_code(401);     
                 return;           
             }
 
-            if($user["privileges"] == 0){
-
+            $priv = getPrivileges($user["group"]);
+            if(!$priv["login"]){
                 http_response_code(403);
                 return;
             }
@@ -37,6 +34,8 @@
             $user["id"] = loginUser($this->body["email"]);
 
             unset($user["password"]);
+            unset($priv["login"]);
+            $user["privileges"] = $priv;
             
             header('content-type: application/json; charset=utf-8');
             http_response_code(200);
@@ -94,7 +93,7 @@
         }
 
         function putAccount(){
-            $this->requireOneOfParams(["email", "name", "zip", "place", "phone", "password", "privileges"]);
+            $this->requireOneOfParams(["email", "name", "zip", "place", "phone", "password", "group"]);
 
             $invokerId = $this->getParam("id");
             $invoker = getUser($invokerId);
@@ -102,19 +101,28 @@
                 http_response_code(401);
                 return;
             }
+            $priv = getPrivileges($invoker["group"]);
 
             if($this->hasParam("phone"))
                 $this->body["phone"] = formatPhone($this->body["phone"]);
 
             $target;
             $discarded = false;
-            if($this->hasParam("targetemail")
-                && !($invoker["email"] === $this->body["targetemail"])){
-                
-                if($invoker["privileges"] == PRIVILEGES_SUPER){
-                    $this->requireOneOfParams(["email", "name", "zip", "place", "phone"], 403);
-                    $discarded = $this->discardParams("password", "privileges");
-                }else if($invoker["privileges"] < PRIVILEGES_SUPER){
+            if($this->hasParam("targetemail") && !($invoker["email"] === $this->body["targetemail"])){
+
+                if($priv["edit_oth_cred"]){
+                    if($priv["edit_oth_pass"]){
+                        if($priv["edit_oth_priv"]){
+                            $this->RequireOneOfParams(["email", "name", "zip", "place", "phone", "password", "group"]);
+                        }else{
+                            $this->RequireOneOfParams(["email", "name", "zip", "place", "phone", "password"]);
+                            $discarded = $this->discardParams(["group"]);
+                        }
+                    }else{
+                        $this->RequireOneOfParams(["email", "name", "zip", "place", "phone"]);
+                        $discarded = $this->discardParams(["password", "group"]);
+                    }
+                }else{
                     http_response_code(403);
                     return;
                 }
@@ -124,8 +132,24 @@
                     http_response_code(404);
                     return;
                 }
-
             }else{
+
+                if($priv["edit_own_cred"]){
+                    if($priv["edit_own_pass"]){
+                        if($priv["edit_own_priv"]){
+                            $this->RequireOneOfParams(["email", "name", "zip", "place", "phone", "password", "group"]);
+                        }else{
+                            $this->RequireOneOfParams(["email", "name", "zip", "place", "phone", "password"]);
+                            $discarded = $this->discardParams(["group"]);
+                        }
+                    }else{
+                        $this->RequireOneOfParams(["email", "name", "zip", "place", "phone"]);
+                        $discarded = $this->discardParams(["password", "group"]);
+                    }
+                }else{
+                    http_response_code(403);
+                    return;
+                }
                 $target = $invoker;
             }
 
@@ -149,7 +173,8 @@
                 return;
             }
 
-            if($invoker["privileges"] < PRIVILEGES_ADMIN){
+            $priv = getPrivileges($invoker["group"]);
+            if(!$priv["delete"]){
                 http_response_code(403);
                 return;
             }
