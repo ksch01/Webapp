@@ -3,10 +3,10 @@
     require __DIR__ . '/../model/Database.php';
     require 'Mailer.php';
 
-    const PRIVILEGES_NONE = 0;
-    const PRIVILEGES_USER = 1;
-    const PRIVILEGES_SUPER = 2;
-    const PRIVILEGES_ADMIN = 3;
+    const PRIVILEGES_NONE = 1;
+    const PRIVILEGES_USER = 2;
+    const PRIVILEGES_SUPER = 3;
+    const PRIVILEGES_ADMIN = 4;
     
     function formatPhone($phone){
         $formattedPhone = str_replace(' ', '', $phone);

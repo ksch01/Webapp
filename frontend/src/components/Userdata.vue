@@ -22,9 +22,9 @@
     const MODE_SIGNUP = 4
     const MODE_STRING_SIGNUP = "signup"
 
-    const PRIVILEGES_USER = "1"
-    const PRIVILEGES_SUPER = "2"
-    const PRIVILEGES_ADMIN = "3"
+    const PRIVILEGES_USER = "2"
+    const PRIVILEGES_SUPER = "3"
+    const PRIVILEGES_ADMIN = "4"
 
     const ERR = new Errors()
     ERR.addError("Bitte prüfen Sie die Eingaben in den markierten Feldern.",
