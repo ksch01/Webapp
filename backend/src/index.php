@@ -1,7 +1,7 @@
 <?php
 	include 'config.php';
 
-	$configPath = 'config.json';
+	$configPath = 'config.json.php';
 	$config = json_decode(file_get_contents($configPath));
 	foreach($config as $key => $value){
 		define($key, $value);

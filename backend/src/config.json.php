@@ -3,11 +3,13 @@
 
     "smtpAddress": "smtp.gmail.com",
     "smtpPort": 587,
-
+    
     "mailUsername": "----------------",
     "mailPassword": "----------------",
 
-    "mysqlAddress": "database",
+    "mysqlAddress": "localhost:3306",
+    "mysqlAddress2": "database",
     "mysqlUsername": "root",
-    "mysqlPassword": "rootpassword"
+    "mysqlPassword": "",
+    "mysqlPassword2": "rootpassword"
 }
