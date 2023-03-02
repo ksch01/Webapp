@@ -47,6 +47,9 @@ class LoginController extends AbstractController{
         if(!$user || !password_verify($password, $user->getPassword())){
             throw new HttpException(401, 'incorrect email or password');
         }
+        if(!$user->getUsergroup()->isPrivLogin()){
+            throw new HttpException(403, 'not enough privileges');
+        }
 
         # --------------
         # update session
