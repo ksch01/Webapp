@@ -12,6 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
@@ -19,6 +20,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 # persist imports
 # ---------------
 use App\Entity\User;
+use App\Repository\UserRepository;
 
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -26,7 +28,7 @@ use Doctrine\Persistence\ManagerRegistry;
 class LoginController extends AbstractController{
 
     #[Route('/login', name: 'api_login', methods: ['POST'])]
-    public function login(ManagerRegistry $doctrine, Request $request) : Response{
+    public function login(UserRepository $repository, Request $request) : Response{
 
         # -----------------------------------
         # get and validate request parameters
@@ -41,19 +43,16 @@ class LoginController extends AbstractController{
         # -----------------
         # authenticate user
         # -----------------
-        $entityManager = $doctrine->getManager();
-        $repository = $entityManager->getRepository(User::class);
         $user = $repository->find($email);
-
         if(!$user || !password_verify($password, $user->getPassword())){
-            throw new UnauthorizedHttpException();
+            throw new HttpException(401, 'incorrect email or password');
         }
 
         # --------------
         # update session
         # --------------
         $user->setSession($this->generateSessionKey());
-        $entityManager->flush();
+        $repository->flush();
 
         # ---------------------
         # send response
@@ -61,14 +60,32 @@ class LoginController extends AbstractController{
         return $this->json(['user' => $user]);
     }
 
-    #[Route('/login/{id}', name: 'api_logout', methods: ['DELETE'])]
-    public function logout() : Response{
-
-    }
-
     private function generateSessionKey(){
         $rand = random_bytes(4);
         return uniqid() . bin2hex($rand);
+    }
+
+    #[Route('/login', name: 'api_logout', methods: ['DELETE'])]
+    public function logout(UserRepository $repository, Request $request) : Response{
+
+        $sessionKey = $request->query->get('session');
+
+        if($sessionKey === null){
+            throw new BadRequestHttpException('logout requests require the id query parameter to be set');
+        }
+
+        $user = $repository->findOneBy(["session" => $sessionKey]);
+
+        if(!$user){
+            throw new HttpException(401, 'invalid or incorrect session key');
+        }
+
+        $user->setSession(null);
+        $repository->flush();
+
+        $response = new Response();
+        $response->setStatusCode(200);
+        return $response;
     }
 }
 

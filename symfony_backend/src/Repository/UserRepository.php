@@ -39,6 +39,11 @@ class UserRepository extends ServiceEntityRepository
         }
     }
 
+    public function flush(): void
+    {
+        $this->getEntityManager()->flush();
+    }
+
 //    /**
 //     * @return User[] Returns an array of User objects
 //     */
