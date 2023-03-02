@@ -7,6 +7,7 @@ import Usersearch from './Usersearch.vue'
 import PermissionCheck from '../PermissionCheck.vue'
 import Data from '../../util/Data.js'
 import Errors from '../../util/Errors.js'
+import Config from '../../config.json'
 
 const props = defineProps(['user'])
 const emit = defineEmits(['loggedout', 'updated'])
@@ -48,7 +49,7 @@ function loadData(){
     requestErrorServer.value = false;
     requestErrorUnreachable.value = false;
 
-    axios.get('http://localhost/index.php/account')
+    axios.get('http://' + Config.backendAddress + '/index.php/account')
         .then(handleReceiveData)
         .catch(handleError)
 }
@@ -104,7 +105,7 @@ function cancelLogout(){
 function logout(){
     isLoading.value = true
 
-    axios.delete('http://localhost/index.php/login?id='+props.user.id)
+    axios.delete('http://' + Config.backendAddress + '/index.php/login?id='+props.user.id)
         .then(loggedout)
         .catch(onLogoutError)
 }

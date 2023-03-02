@@ -8,6 +8,7 @@ import Data from '../../util/Data.js'
 import Errors from '../../util/Errors.js'
 import * as validate from '../../util/InputValidator.js'
 import Param from '../../util/FormParameter.js'
+import Config from '../../config.json'
 
 const props = defineProps([
     "email",
@@ -84,7 +85,7 @@ function search(){
         params.append(key, value)
     }
 
-    axios.get('http://localhost/index.php/account', { params } )
+    axios.get('http://' + Config.backendAddress + '/index.php/account', { params } )
         .then(handleResponse)
         .catch(handleError)
 }

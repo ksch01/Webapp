@@ -7,6 +7,7 @@
     import Errors from '../util/Errors.js'
     import Param from '../util/FormParameter'
     import * as validate from '../util/InputValidator.js'
+    import Config from '../config.json'
 
     const props = defineProps(["user", "mode", "privileges", "invoker"])
     const emit = defineEmits(["login", "updated", "deleted", "signedup", "returned"])
@@ -163,7 +164,7 @@
 
         axios({
             method: mode.value === MODE_SIGNUP ? 'post' : 'put',
-            url: 'http://localhost/index.php/account',
+            url: 'http://' + Config.backendAddress + '/index.php/account',
             data: params})
             .then(handlePutResponse)
             .catch(handlePutError)
@@ -231,7 +232,7 @@
 
         axios({
             method: 'delete',
-            url: 'http://localhost/index.php/account',
+            url: 'http://' + Config.backendAddress + '/index.php/account',
             data: params})
             .then(handleDeleteResponse)
             .catch(handleDeleteError)

@@ -6,6 +6,7 @@ import Error from '../Error.vue'
 import Errors from '../../util/Errors.js'
 import Param from '../../util/FormParameter.js'
 import * as validate from '../../util/InputValidator.js'
+import Config from '../../config.json'
 
 const emit = defineEmits(['signup', 'loggedin'])
 
@@ -56,7 +57,7 @@ function tryLogin(){
         requestErrorServer.value = false
         requestErrorUnreachable.value = false
 
-        axios.post('http://localhost/index.php/login', params)
+        axios.post('http://' + Config.backendAddress + '/index.php/login', params)
             .then(handleResponse)
             .catch(handleError)   
     }
