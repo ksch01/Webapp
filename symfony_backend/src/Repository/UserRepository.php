@@ -44,6 +44,20 @@ class UserRepository extends ServiceEntityRepository
         $this->getEntityManager()->flush();
     }
 
+    public function searchAllBy(array $criteria){
+        $entityManager = $this->getEntityManager();
+
+        $queryBuilder = 
+            $this->createQueryBuilder('p');
+        foreach($criteria as $key => $value){
+            $queryBuilder->andWhere('p.' . $key . ' LIKE :' . $key);
+            $queryBuilder->setParameter($key, '%' . $value . '%');
+        }
+        $query = $queryBuilder->getQuery();
+
+        return $query->execute();
+    }
+
 //    /**
 //     * @return User[] Returns an array of User objects
 //     */
