@@ -26,6 +26,11 @@ use Doctrine\Persistence\ManagerRegistry;
 
 
 class LoginController extends AbstractController{
+    
+    private function generateSessionKey(){
+        $rand = random_bytes(4);
+        return uniqid() . bin2hex($rand);
+    }
 
     #[Route('/login', name: 'api_login', methods: ['POST'])]
     public function login(UserRepository $repository, Request $request) : Response{
@@ -61,11 +66,6 @@ class LoginController extends AbstractController{
         # send response
         # ---------------------
         return $this->json(['user' => $user]);
-    }
-
-    private function generateSessionKey(){
-        $rand = random_bytes(4);
-        return uniqid() . bin2hex($rand);
     }
 
     #[Route('/login', name: 'api_logout', methods: ['DELETE'])]

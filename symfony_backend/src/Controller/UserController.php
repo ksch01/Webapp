@@ -9,15 +9,24 @@ use Symfony\Component\Routing\Annotation\Route;
 
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 use App\Entity\User;
 use App\Entity\UserPrep;
 use App\Repository\UserRepository;
+use App\Repository\UserGroupRepository;
 
 class UserController extends AbstractController{
+    
+    private function generateSessionKey(){
+        $rand = random_bytes(4);
+        return uniqid() . bin2hex($rand);
+    }
 
     #[Route('/user', name:'api_user_get', methods:['GET'])]
     public function searchUsers(UserRepository $repository, Request $request) : Response{
@@ -62,6 +71,47 @@ class UserController extends AbstractController{
         }
 
         $repository->remove($target, true);
+
+        $response = new Response();
+        $response->setStatusCode(200);
+        return $response;
+    }
+
+    #[Route('/user', name:'api_user_post', methods:['POST'])]
+    public function addUser(UserRepository $repository, UserGroupRepository $groupRepository, ValidatorInterface $validator, Request $request) : Response{
+
+        $email = $request->request->get('email');
+        if($repository->find($email) != false){
+            throw new ConflictHttpException('user with email "' . $email . '" does already exist');
+        }
+
+        $password = $request->request->get('password');
+        if($password === null || strlen($password) < 8){
+            throw new BadRequestHttpException('post user request require the password request parameter to be set and have a length of at least 8');
+        }
+
+        $user = new User();
+        $user->setEmail($request->request->get('email'));
+        $user->setName($request->request->get('name'));
+        $user->setZip($request->request->get('zip'));
+        $user->setPlace($request->request->get('place'));
+        $user->setPhone($request->request->get('phone'));
+
+        $errors = $validator->validate($user);
+        if(count($errors) > 0){
+            $errorString = (string) $errors;
+            throw new BadRequestHttpException('post user request require the email, name, zip, place and phone request parameters to be set and have valid values');
+        }
+        
+        $user->setSession($this->generateSessionKey());
+
+        $usergroup = $groupRepository->find('pending');
+        $user->setUsergroup($usergroup);
+
+        $password = password_hash($password, PASSWORD_DEFAULT);
+        $user->setPassword($password);
+
+        $repository->save($user, true);
 
         $response = new Response();
         $response->setStatusCode(200);
