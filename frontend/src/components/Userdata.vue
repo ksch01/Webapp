@@ -164,7 +164,7 @@
 
         axios({
             method: mode.value === MODE_SIGNUP ? 'post' : 'put',
-            url: 'http://' + Config.backendAddress + '/index.php/account',
+            url: 'http://' + Config.backendAddress + '/user',
             data: params})
             .then(handlePutResponse)
             .catch(handlePutError)
@@ -232,7 +232,7 @@
 
         axios({
             method: 'delete',
-            url: 'http://' + Config.backendAddress + '/index.php/account',
+            url: 'http://' + Config.backendAddress + '/user',
             data: params})
             .then(handleDeleteResponse)
             .catch(handleDeleteError)

@@ -1,3 +1,4 @@
 {
-    "backendAddress": "localhost:80"
+    "backendAddressPlain": "localhost:80/index.php",
+    "backendAddress": "localhost:8000"
 }

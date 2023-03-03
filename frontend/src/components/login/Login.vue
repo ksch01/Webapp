@@ -57,7 +57,7 @@ function tryLogin(){
         requestErrorServer.value = false
         requestErrorUnreachable.value = false
 
-        axios.post('http://' + Config.backendAddress + '/index.php/login', params)
+        axios.post('http://' + Config.backendAddress + '/login', params)
             .then(handleResponse)
             .catch(handleError)   
     }

@@ -49,7 +49,7 @@ function loadData(){
     requestErrorServer.value = false;
     requestErrorUnreachable.value = false;
 
-    axios.get('http://' + Config.backendAddress + '/index.php/account')
+    axios.get('http://' + Config.backendAddress + '/user')
         .then(handleReceiveData)
         .catch(handleError)
 }
@@ -105,7 +105,7 @@ function cancelLogout(){
 function logout(){
     isLoading.value = true
 
-    axios.delete('http://' + Config.backendAddress + '/index.php/login?id='+props.user.id)
+    axios.delete('http://' + Config.backendAddress + '/login?id='+props.user.id)
         .then(loggedout)
         .catch(onLogoutError)
 }

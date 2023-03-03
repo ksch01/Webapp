@@ -85,7 +85,7 @@ function search(){
         params.append(key, value)
     }
 
-    axios.get('http://' + Config.backendAddress + '/index.php/account', { params } )
+    axios.get('http://' + Config.backendAddress + '/user', { params } )
         .then(handleResponse)
         .catch(handleError)
 }
