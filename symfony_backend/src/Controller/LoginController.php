@@ -65,7 +65,7 @@ class LoginController extends AbstractController{
         # ---------------------
         # send response
         # ---------------------
-        return $this->json(['user' => $user]);
+        return $this->json($user);
     }
 
     #[Route('/login', name: 'api_logout', methods: ['DELETE'])]
