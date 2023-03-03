@@ -6,11 +6,15 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -78,20 +82,20 @@ class UserController extends AbstractController{
     }
 
     #[Route('/user', name:'api_user_post', methods:['POST'])]
-    public function addUser(UserRepository $repository, UserGroupRepository $groupRepository, ValidatorInterface $validator, Request $request) : Response{
+    public function addUser(UserRepository $repository, UserGroupRepository $groupRepository, ValidatorInterface $validator, MailerInterface $mailer,Request $request) : Response{
 
-        $email = $request->request->get('email');
-        if($repository->find($email) != false){
-            throw new ConflictHttpException('user with email "' . $email . '" does already exist');
+        $emailAddress = $request->request->get('email');
+        if($repository->find($emailAddress) != false){
+            throw new ConflictHttpException('user with email "' . $emailAddress . '" does already exist');
         }
 
         $password = $request->request->get('password');
         if($password === null || strlen($password) < 8){
-            throw new BadRequestHttpException('post user request require the password request parameter to be set and have a length of at least 8');
+            throw new BadRequestHttpException('post user requests require the password request parameter to be set and have a length of at least 8');
         }
 
         $user = new User();
-        $user->setEmail($request->request->get('email'));
+        $user->setEmail($emailAddress);
         $user->setName($request->request->get('name'));
         $user->setZip($request->request->get('zip'));
         $user->setPlace($request->request->get('place'));
@@ -99,11 +103,19 @@ class UserController extends AbstractController{
 
         $errors = $validator->validate($user);
         if(count($errors) > 0){
-            $errorString = (string) $errors;
-            throw new BadRequestHttpException('post user request require the email, name, zip, place and phone request parameters to be set and have valid values');
+            throw new BadRequestHttpException('post user requests require the email, name, zip, place and phone request parameters to be set and have valid values');
         }
         
-        $user->setSession($this->generateSessionKey());
+        $activateKey = $this->generateSessionKey();
+        $user->setSession($activateKey);
+
+        $link = $this->generateUrl('api_user_varify', ['key' => $activateKey], UrlGeneratorInterface::ABSOLUTE_URL);
+        $email = (new Email())
+            ->from('ks0122021@gmail.com')
+            ->to($emailAddress)
+            ->subject('Ihre Regestrierung')
+            ->html('<h1>Ihre Regestrierung</h1>Klicken Sie <a href=' . $link . '>hier</a> um Ihre Regestrierung abzuschließen');
+        $mailer->send($email);
 
         $usergroup = $groupRepository->find('pending');
         $user->setUsergroup($usergroup);
@@ -116,6 +128,28 @@ class UserController extends AbstractController{
         $response = new Response();
         $response->setStatusCode(200);
         return $response;
+    }
+
+    #[Route('/varify', name:'api_user_varify', methods:['GET'])]
+    public function validateUser(UserRepository $repository, UserGroupRepository $groupRepository, Request $request) : Response{
+        
+        $activateKey = $request->query->get('key');
+        if($activateKey === null){
+            throw new BadRequestHttpException('varify requests require the key query parameter to be set');
+        }
+
+        $user = $repository->findOneBy(["session" => $activateKey]);
+        if(!$user || $user->getUsergroup()->getName() !== 'pending'){
+            return $this->redirect('http://localhost:8080/#/invalid');
+        }
+
+        $usergroup = $groupRepository->find('user');
+        $user->setUsergroup($usergroup);
+        $user->setSession(null);
+
+        $repository->flush();
+
+        return $this->redirect('http://localhost:8080/#/activated');
     }
 }
 
