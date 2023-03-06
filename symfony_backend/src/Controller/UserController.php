@@ -26,6 +26,9 @@ use App\Repository\UserRepository;
 use App\Repository\UserGroupRepository;
 
 class UserController extends AbstractController{
+
+    private const FRONTEND_ADDRESS = 'localhost';
+    private const FRONTEND_PORT = '8080';
     
     private function generateSessionKey(){
         $rand = random_bytes(4);
@@ -260,7 +263,7 @@ class UserController extends AbstractController{
 
         $user = $repository->findOneBy(["session" => $activateKey]);
         if(!$user || $user->getUsergroup()->getName() !== 'pending'){
-            return $this->redirect('http://localhost:8080/#/invalid');
+            return $this->redirect($this->getAbsoluteFrontendAddress('/#/invalid'));
         }
 
         $usergroup = $groupRepository->find('user');
@@ -269,7 +272,11 @@ class UserController extends AbstractController{
 
         $repository->flush();
 
-        return $this->redirect('http://localhost:8080/#/activated');
+        return $this->redirect($this->getAbsoluteFrontendAddress('/#/activated'));
+    }
+
+    private function getAbsoluteFrontendAddress($relative){
+        return 'http://' . self::FRONTEND_ADDRESS . ':' . self::FRONTEND_PORT . $relative;
     }
 
     #[Route('/usergroup', name:'api_get_usergroup', methods:['GET'])]
