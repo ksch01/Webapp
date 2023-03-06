@@ -101,7 +101,7 @@ function setScreen(newScreen){
 
 <template>
     <div v-if="screen === SCREEN_LIST" class="userlist">
-        <Table :rows="displayed" :exclude="['group']" :sortAttribute='props.data.sortAttribute.attribute' :sortDirection='props.data.sortDirection' @sort="sort" @select="select"/>
+        <Table :rows="displayed" :exclude="['usergroup']" :sortAttribute='props.data.sortAttribute.attribute' :sortDirection='props.data.sortDirection' @sort="sort" @select="select"/>
         <div class="footer">
             <div v-if='props.isLoading' class='small-loader'/>
             <button v-else class='reload' @click="reload">

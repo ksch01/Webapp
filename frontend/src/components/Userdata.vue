@@ -53,8 +53,7 @@
     const privileges = ref(PRIVILEGES_USER)
 
     const password = ref(new Param('', () => (mode.value !== MODE_SIGNUP && password.value.value === '') || validate.password(password.value.value)))
-    const passwordR = ref(new Param('', () => (mode.value !== MODE_SIGNUP && passwordR.value.value === '') || !password.value.isValid || password.value.value === passwordR.value.value))
-
+    const passwordR = ref(new Param('', () => (mode.value !== MODE_SIGNUP && password.value.value === '') || !password.value.isValid || password.value.value === passwordR.value.value))
     const consent = ref(false)
     const consentPresent = ref(true)
 
@@ -68,6 +67,8 @@
     const isEraseCheck = ref(false)
     const isErasing = ref(false)
     const isErased = ref(false)
+
+    let groupchanged = false;
 
     onBeforeMount(() => {
         if(props.user !== undefined){
@@ -101,7 +102,7 @@
         place.value.setAndCheck(props.user.place)
         phone.value.setAndCheck(props.user.phone)
 
-        privileges.value = props.user.group
+        privileges.value = props.user.usergroup.name
 
         password.value.setAndCheck('')
         passwordR.value.setAndCheck('')
@@ -150,13 +151,19 @@
             params.append('phone', phone.value.value)
         if(password.value.value != '')
             params.append('password', password.value.value)
-        if(mode.value === MODE_EDIT_OWN)
-            params.append('id', props.user.id)
-        else if(mode.value === MODE_EDIT_OTHER){
-            params.append('id', props.invoker)
-            params.append('targetemail', props.user.email)
-            if(privileges.value != props.user.group)
+
+        if(mode.value === MODE_EDIT_OWN || mode.value === MODE_EDIT_OTHER){
+            if(mode.value === MODE_EDIT_OWN){
+                params.append('session', props.user.session)
+            }else if(mode.value === MODE_EDIT_OTHER){
+                params.append('session', props.invoker)
+                params.append('target', props.user.email)
+            }
+
+            if(privileges.value != props.user.usergroup.name){
                 params.append('group', privileges.value)
+                groupchanged = true;
+            }
         }
 
         isLoading.value = true
@@ -170,25 +177,39 @@
             .catch(handlePutError)
     }
     function handlePutResponse(){
-        isLoading.value = false
 
-        if(mode.value === MODE_EDIT_OWN || mode.value === MODE_EDIT_OTHER){
-            emit("updated", {
-                initialEmail: props.user.email,
-                email: email.value.value,
-                name: name.value.value,
-                zip: zip.value.value,
-                place: place.value.value,
-                phone: phone.value.value,
-                group: privileges.value
-            })
-            if(mode.value === MODE_EDIT_OWN)
+        if(mode.value === MODE_EDIT_OWN){
+            if(groupchanged){
+                const params = new URLSearchParams()
+                params.append('group', privileges.value)
+                axios.get('http://' + Config.backendAddress + '/usergroup', { params })
+                    .then(response => {
+                        isLoading.value = false
+                        emitUpdated(response.data)
+                        mode.value = MODE_READ
+                    })
+                    .catch((error) => {
+                        handleError(error)
+                        isLoading.value = false
+                    })
+                groupchanged = false;
+            }else{
+                
+                isLoading.value = false
+                emitUpdated(props.user.usergroup)
                 mode.value = MODE_READ
-            else
-                mode.value = MODE_OBSERVE
+            }
+        }
+        else if(mode.value === MODE_EDIT_OTHER){
+
+            isLoading.value = false
+            emitUpdated({
+                name: privileges.value
+            })
+            mode.value = MODE_OBSERVE
         }else{
             emit("signedup")
-        }
+        }  
     }
     function handlePutError(error){
         isLoading.value = false
@@ -204,6 +225,18 @@
         }else{
             requestErrorUnreachable.value = true
         }
+    }
+
+    function emitUpdated(usergroup){
+        emit("updated", {
+            initialEmail: props.user.email,
+            email: email.value.value,
+            name: name.value.value,
+            zip: zip.value.value,
+            place: place.value.value,
+            phone: phone.value.value,
+            usergroup: usergroup
+        })
     }
 
     function resetErrors(){
@@ -279,7 +312,7 @@
             props.user.zip === zip.value.value &&
             props.user.place === place.value.value &&
             props.user.phone === phone.value.value &&
-            props.user.group === privileges.value && 
+            props.user.usergroup.name === privileges.value && 
             password.value.value === '' && 
             passwordR.value.value === ''
         ) && validInput()
@@ -287,30 +320,30 @@
 
     function hasEditPriv(){
         if(mode.value === MODE_READ)
-            return props.privileges.edit_own_cred
+            return props.privileges.editOwnCred
         else if(mode.value === MODE_OBSERVE)
-            return props.privileges.edit_oth_cred
+            return props.privileges.editOthCred
         return false
     }
     function hasEditPassPriv(){
         if(mode.value === MODE_SIGNUP)
             return true;
         else if(mode.value === MODE_EDIT_OWN)
-            return props.privileges.edit_own_pass;
+            return props.privileges.editOwnPass;
         else if(mode.value === MODE_EDIT_OTHER)
-            return props.privileges.edit_oth_pass;
+            return props.privileges.editOthPass;
         return false;
     }
     function hasEditPrivPriv(){
         if(mode.value === MODE_EDIT_OWN)
-            return props.privileges.edit_own_priv;
+            return props.privileges.editOwnPriv;
         else if(mode.value === MODE_EDIT_OTHER)
-            return props.privileges.edit_oth_priv;
+            return props.privileges.editOthPriv;
         return false;
     }
     function hasDeletePriv(){
         if(mode.value === MODE_EDIT_OTHER)
-            return props.privileges.delete;
+            return props.privileges.privDelete;
         return false;
     }
 

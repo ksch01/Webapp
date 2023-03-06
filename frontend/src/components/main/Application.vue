@@ -72,9 +72,9 @@ function reload(){
 }
 
 function updated(updatedUser){
-    let id = user.value.id
+    let session = user.value.session
     user.value = updatedUser
-    user.value.id = id
+    user.value.session = session
 
     updatedOther(updatedUser)
 }
@@ -105,7 +105,7 @@ function cancelLogout(){
 function logout(){
     isLoading.value = true
 
-    axios.delete('http://' + Config.backendAddress + '/login?id='+props.user.id)
+    axios.delete('http://' + Config.backendAddress + '/login?session='+props.user.session)
         .then(loggedout)
         .catch(onLogoutError)
 }
@@ -154,9 +154,9 @@ function getSelectorClass(screen){
     </div>
     <div class='section-content'>
         <div class='content form' v-if='contentScreen === SCREEN_MESSAGE'>{{message}}</div>
-        <Userdata v-else-if='contentScreen === SCREEN_MYDATA' :user='user' :privileges='user.privileges' @updated="updated"/>
-        <Userlist v-else-if='contentScreen === SCREEN_LISTPERSONS' :data='data' :page='page' :email='user.email' :id='user.id' :privileges='user.privileges' :isLoading="isLoading" :err="ERR" @selectedself="setScreen(SCREEN_MYDATA)" @sort="sort" @reverse="reverse" @page="setPage" @updated="updatedOther" @deleted="deleted" @reload="reload"/>
-        <Usersearch v-else-if='contentScreen === SCREEN_SEARCH' :email='user.email' :id='user.id' :privileges='user.privileges' @selectedself="setScreen(SCREEN_MYDATA)" @updatedOther="updatedOther" @deleted="deleted"/>
+        <Userdata v-else-if='contentScreen === SCREEN_MYDATA' :user='user' :privileges='user.usergroup' @updated="updated"/>
+        <Userlist v-else-if='contentScreen === SCREEN_LISTPERSONS' :data='data' :page='page' :email='user.email' :id='user.session' :privileges='user.usergroup' :isLoading="isLoading" :err="ERR" @selectedself="setScreen(SCREEN_MYDATA)" @sort="sort" @reverse="reverse" @page="setPage" @updated="updatedOther" @deleted="deleted" @reload="reload"/>
+        <Usersearch v-else-if='contentScreen === SCREEN_SEARCH' :email='user.email' :id='user.session' :privileges='user.usergroup' @selectedself="setScreen(SCREEN_MYDATA)" @updatedOther="updatedOther" @deleted="deleted"/>
         <PermissionCheck v-else-if='contentScreen === SCREEN_LOGOUT' :progressing="isLoading" @cancel="cancelLogout" @accept="logout">Wollen Sie sich wirklich ausloggen?</PermissionCheck>
         <div v-else class='content form'>
             <div>
