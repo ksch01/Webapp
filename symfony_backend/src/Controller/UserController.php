@@ -271,6 +271,22 @@ class UserController extends AbstractController{
 
         return $this->redirect('http://localhost:8080/#/activated');
     }
+
+    #[Route('/usergroup', name:'api_get_usergroup', methods:['GET'])]
+    public function getUsergroup(UsergroupRepository $repository, Request $request) : Response{
+
+        $groupname = $request->query->get('group');
+        if($groupname === null){
+            throw new BadRequestHttpException('get usergroup requests require the group query parameter to be set');
+        }
+
+        $usergroup = $repository->find($groupname);
+        if(!$usergroup){
+            return new NotFoundHttpException('get usergroup target ' . $groupname . ' could not be found');
+        }
+
+        return $this->json($usergroup);
+    }
 }
 
 ?>
