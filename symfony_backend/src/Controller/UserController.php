@@ -27,8 +27,13 @@ use App\Repository\UserGroupRepository;
 
 class UserController extends AbstractController{
 
-    private const FRONTEND_ADDRESS = 'localhost';
-    private const FRONTEND_PORT = '8080';
+    private string $frontendAddress;
+    private string $frontendPort;
+
+    function __construct(string $frontendAddress, string $frontendPort){
+        $this->frontendAddress = $frontendAddress;
+        $this->frontendPort = $frontendPort;
+    }
     
     private function generateSessionKey(){
         $rand = random_bytes(4);
@@ -276,10 +281,10 @@ class UserController extends AbstractController{
     }
 
     private function getAbsoluteFrontendAddress($relative){
-        return 'http://' . self::FRONTEND_ADDRESS . ':' . self::FRONTEND_PORT . $relative;
+        return 'http://' . $this->frontendAddress . ':' . $this->frontendPort . $relative;
     }
 
-    #[Route('/usergroup', name:'api_get_usergroup', methods:['GET'])]
+    #[Route('/usergroup', name:'api_usergroup_get', methods:['GET'])]
     public function getUsergroup(UsergroupRepository $repository, Request $request) : Response{
 
         $groupname = $request->query->get('group');

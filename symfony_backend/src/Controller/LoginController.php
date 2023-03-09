@@ -22,18 +22,21 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use App\Entity\User;
 use App\Repository\UserRepository;
 
+use App\Services\LoginService;
+
 use Doctrine\Persistence\ManagerRegistry;
 
 
 class LoginController extends AbstractController{
     
-    private function generateSessionKey(){
-        $rand = random_bytes(4);
-        return uniqid() . bin2hex($rand);
+    private LoginService $service;
+
+    function __construct(UserRepository $repo){
+        $this->service = new LoginService($repo);
     }
 
     #[Route('/login', name: 'api_login', methods: ['POST'])]
-    public function login(UserRepository $repository, Request $request) : Response{
+    public function login(Request $request) : Response{
 
         # -----------------------------------
         # get and validate request parameters
@@ -48,19 +51,18 @@ class LoginController extends AbstractController{
         # -----------------
         # authenticate user
         # -----------------
-        $user = $repository->find($email);
-        if(!$user || !password_verify($password, $user->getPassword())){
+        $user = $this->service->getVerifyUser($email, $password);
+        if(!$user){
             throw new HttpException(401, 'incorrect email or password');
-        }
-        if(!$user->getUsergroup()->isPrivLogin()){
-            throw new HttpException(403, 'not enough privileges');
         }
 
         # --------------
         # update session
         # --------------
-        $user->setSession($this->generateSessionKey());
-        $repository->flush();
+        $sessionStarted = $this->service->startSession($user);
+        if(!$sessionStarted){
+            throw new HttpException(403, 'not enough privileges');
+        }
 
         # ---------------------
         # send response
@@ -69,7 +71,7 @@ class LoginController extends AbstractController{
     }
 
     #[Route('/login', name: 'api_logout', methods: ['DELETE'])]
-    public function logout(UserRepository $repository, Request $request) : Response{
+    public function logout(Request $request) : Response{
 
         $sessionKey = $request->query->get('session');
 
@@ -77,14 +79,11 @@ class LoginController extends AbstractController{
             throw new BadRequestHttpException('logout requests require the id query parameter to be set');
         }
 
-        $user = $repository->findOneBy(["session" => $sessionKey]);
+        $sessionEnded = $this->service->endSession($sessionKey);
 
-        if(!$user){
+        if(!$sessionEnded){
             throw new HttpException(401, 'invalid or incorrect session key');
         }
-
-        $user->setSession(null);
-        $repository->flush();
 
         $response = new Response();
         $response->setStatusCode(200);
