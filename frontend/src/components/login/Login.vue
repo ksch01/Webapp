@@ -38,7 +38,9 @@ const requestErrorUnreachable = ref(false)
 
 const isLoading = ref(false)
 
-function tryLogin(){
+function tryLogin(event){
+
+    event.preventDefault()
 
     email.value.check()
     password.value.check()
@@ -93,22 +95,25 @@ function checkPassword(){password.value.check()}
 </script>
 
 <template>
-    <div class='section-side'>
-        <h1>Login</h1>
+    <div class='section-side d-flex flex-column flex-shrink-0 p-3 text-white bg-dark'>
+        <h1 class='mb-3 mx-auto text-white text-decoration-none'>Login</h1>
+        <hr/>
+        <ul class='nav nav-pills flex-column mb-auto'/>
+        <hr/>
     </div>
-    <div class='section-content'>
-        <div class='content form'>
+    <div class='d-flex flex-column flex-grow-1 justify-content-center align-items-center'>
+        <form class="form-width needs-validation">
+            <Error :err="ERR" class="form-width"/>
+            
             <Input label='E-mail' :invalid='!email.isValid' v-model='email.value' :type='getType()' @focusout='checkEmail'/>
             <Input label='Password' :invalid='!password.isValid' v-model='password.value' :type='getType("password")' @focusout='checkPassword'/>
-            
-            <Error :err="ERR"/>
                         
-            <button v-if='!isLoading' class='form-button' @click="tryLogin">Login</button>
+            <button v-if='!isLoading' class='m-2 ms-0 btn btn-secondary' @click="tryLogin">Login</button>
             <div v-else class='loader'></div>
             
             <div>
                 Noch kein Konto? Zum regestrieren <a @click='$emit("signup")'>hier</a> klicken.
             </div>
-        </div>
+        </form>
     </div>
 </template>

@@ -1,6 +1,6 @@
 <script setup>
 
-const props = defineProps(['label', 'type', 'invalid', 'modelValue'])
+const props = defineProps(['label', 'type', 'invalid', 'modelValue', 'id'])
 const emit = defineEmits(['update:modelValue', 'focusout', 'onkeyPress:event'])
 
 function getType(){
@@ -12,9 +12,10 @@ function getType(){
 
 <template>
     <div class="input">
-        <label class="input-label">{{label}}</label>
+        <label class="form-label" :for="props.id">{{label}}</label>
         <input 
-            :class="(props.invalid) ? 'input-input input-invalid' : 'input-input'" 
+            :class="(props.invalid) ? 'form-control input-invalid' : 'form-control'" 
+            :id="props.id"
             :type="getType()" 
             :value="modelValue" 
             :disabled="type.includes('disabled')" 

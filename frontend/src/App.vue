@@ -33,7 +33,7 @@ function loggedout(){
 </script>
 
 <template>
-  <div class='screen'>
+  <div class="screen">
     <Login v-if="screen === SCREEN_LOGIN" @signup="signup" @loggedin="loggedin"/>
     <Signup v-else-if="screen === SCREEN_SIGNUP" @login="login"/>
     <Main v-else-if="screen === SCREEN_MAIN" :user="user" @loggedout="loggedout"/>
