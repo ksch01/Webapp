@@ -16,10 +16,15 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\PasswordType;
+
 # ---------------
 # persist imports
 # ---------------
 use App\Entity\User;
+use App\Entity\LoginCredentials;
 use App\Repository\UserRepository;
 
 use App\Services\LoginService;
@@ -35,38 +40,58 @@ class LoginController extends AbstractController{
         $this->service = new LoginService($repo);
     }
 
+    #[Route('/login', name: 'api_login_form', methods: ['GET'])]
+    public function loginForm(){
+        
+        $loginCredentials = new LoginCredentials();
+        
+        $form = $this->createFormBuilder($loginCredentials)
+            ->add('email', TextType::class)
+            ->add('password', PasswordType::class)
+            ->add('save', SubmitType::class, ['label' => 'Login'])
+            ->getForm();
+        
+        return $this->render('form.html.twig', [
+            'form' => $form
+        ]);
+    }
+
     #[Route('/login', name: 'api_login', methods: ['POST'])]
     public function login(Request $request) : Response{
 
-        # -----------------------------------
-        # get and validate request parameters
-        # -----------------------------------
+        // -----------------------------------
+        // get request parameters
+        // -----------------------------------
+
         $email = $request->request->get('email');
         $password = $request->request->get('password');
+
+        // -----------------------------------
+        // validate request parameters
+        // -----------------------------------
 
         if($email === null || $password === null){
             throw new BadRequestHttpException('login requests require the email and password request parameter to be set');
         }
 
-        # -----------------
-        # authenticate user
-        # -----------------
+        // -----------------
+        // authenticate user
+        // -----------------
+
         $user = $this->service->getVerifyUser($email, $password);
         if(!$user){
             throw new HttpException(401, 'incorrect email or password');
         }
 
-        # --------------
-        # update session
-        # --------------
-        $sessionStarted = $this->service->startSession($user);
-        if(!$sessionStarted){
-            throw new HttpException(403, 'not enough privileges');
-        }
+        // --------------
+        // update session
+        // --------------
+        
+        if(!$this->service->startSession($user)) throw new HttpException(403, 'not enough privileges');
 
-        # ---------------------
-        # send response
-        # ---------------------
+        // ---------------------
+        // send response
+        // ---------------------
         return $this->json($user);
     }
 
@@ -79,11 +104,7 @@ class LoginController extends AbstractController{
             throw new BadRequestHttpException('logout requests require the id query parameter to be set');
         }
 
-        $sessionEnded = $this->service->endSession($sessionKey);
-
-        if(!$sessionEnded){
-            throw new HttpException(401, 'invalid or incorrect session key');
-        }
+        if(!$this->service->endSession($sessionKey)) throw new HttpException(401, 'invalid or incorrect session key');
 
         $response = new Response();
         $response->setStatusCode(200);
