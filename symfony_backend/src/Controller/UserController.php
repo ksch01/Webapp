@@ -18,10 +18,16 @@ use Symfony\Component\Mime\Email;
 
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\PasswordType;
+
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 use App\Entity\User;
 use App\Entity\UserPrep;
+use App\Entity\UserCredentials;
 use App\Repository\UserRepository;
 use App\Repository\UserGroupRepository;
 
@@ -40,7 +46,7 @@ class UserController extends AbstractController{
             '/user/view' => "My Data",
             '/user/list' => "List Users",
             '/user/search' => "Search",
-            '/loginfromform' => "Logout"
+            '/logout' => "Logout"
         ];
     }
     
@@ -49,11 +55,43 @@ class UserController extends AbstractController{
         return uniqid() . bin2hex($rand);
     }
 
-    #[Route('/user/view', name:'api_user_view', methods:['GET'])]
-    public function userView() : Response{
-        return $this->render('main.html.twig', [
+    #[Route('/user/view', name:'api_user_view', methods:['GET', 'POST'])]
+    public function userView(Request $request) : Response{
+
+        $session = $request->getSession();
+
+        $userCredentials = new UserCredentials();
+
+        $form = $this->createFormBuilder($userCredentials)
+            ->add('email', TextType::class)
+            ->add('name', TextType::class)
+            ->add('zip', IntegerType::class)
+            ->add('place', TextType::class)
+            ->add('phone', TextType::class)
+            ->add('password', PasswordType::class)
+            ->add('repeat', PasswordType::class)
+            ->add('submit', SubmitType::class, ['label' => 'Update'])
+            ->getForm();
+        $form->handleRequest($request);
+        $error = false;
+
+        if($form->isSubmitted() && $form->isValid()) {
+
+            return $this->render('user.html.twig', [
+                'pageTitle' => "Users",
+                'menuPoints' => $this->menuPoints,
+                'currentPoint' => '/user/view',
+                'form' => $form,
+                'error' => $error
+            ]);
+        }
+
+        return $this->render('user.html.twig', [
             'pageTitle' => "Users",
-            'menuPoints' => $this->menuPoints
+            'menuPoints' => $this->menuPoints,
+            'currentPoint' => '/user/view',
+            'form' => $form,
+            'error' => $error
         ]);
     }
 

@@ -7,6 +7,7 @@ namespace App\Controller;
 // ---------------
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -48,7 +49,7 @@ class LoginController extends AbstractController{
         $form = $this->createFormBuilder($loginCredentials)
             ->add('email', TextType::class)
             ->add('password', PasswordType::class)
-            ->add('save', SubmitType::class, ['label' => 'Login'])
+            ->add('submit', SubmitType::class, ['label' => 'Login'])
             ->getForm();
 
         $form->handleRequest($request);
@@ -63,7 +64,17 @@ class LoginController extends AbstractController{
             }else if(!$this->service->startSession($user)){
                 $error = "This account has not yet been activated. To activate this account use the link in your email.";
             }else{
-                return $this->redirectToRoute('api_user_form_nav');
+                $session = $request->getSession();
+                $session->start();
+
+                $session->set('email', $user->getEmail());
+                $session->set('name', $user->getName());
+                $session->set('zip', $user->getZip());
+                $session->set('place', $user->getPlace());
+                $session->set('phone', $user->getPhone());
+                $session->set('sessionKey', $user->getSession());
+
+                return $this->redirectToRoute('api_user_view');
             }
         }
 
@@ -72,6 +83,12 @@ class LoginController extends AbstractController{
             'error' => $error,
             'pageTitle' => "Login"
         ]);
+    }
+
+    #[Route('/logout', name: 'api_logout_form', methods: ['GET'])]
+    public function logoutFromForm(Request $request) : Response{
+        $request->getSession()->clear();
+        return $this->redirectToRoute('api_login_form');
     }
 
     #[Route('/login', name: 'api_login', methods: ['POST'])]

@@ -3,9 +3,15 @@
 {% block menuPoints %}
     {% for link, menuPoint in menuPoints %}
         <li class='nav-item'>
-            <a href={{ link }} class='nav-link text-white'>
-                {{ menuPoint }}
-            </a>
+            {% if link == currentPoint %}
+                <a href={{ link }} class='nav-link text-white active'>
+                    {{ menuPoint }}
+                </a>
+            {% else %}
+                <a href={{ link }} class='nav-link text-white'>
+                    {{ menuPoint }}
+                </a>
+            {% endif %}
         </li>
     {% endfor %}
 {% endblock %}

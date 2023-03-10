@@ -1,0 +1,10 @@
+{% extends "main.html.twig" %}
+
+{% block body %}
+    {% if not (error is same as false) %}
+        <div class='alert alert-danger'>
+                {{ error }}
+        </div>
+    {% endif %}
+    {{ form(form) }}
+{% endblock %}
