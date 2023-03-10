@@ -72,19 +72,19 @@ class UserCredentials
         $this->phone = $phone;
     }
 
-    public function getPassword() : string{
+    public function getPassword(){
         return $this->password;
     }
 
-    public function setPassword(string $password){
+    public function setPassword($password){
         $this->password = $password;
     }
 
-    public function getRepeat() : string{
+    public function getRepeat(){
         return $this->repeat;
     }
 
-    public function setRepeat(string $repeat){
+    public function setRepeat($repeat){
         $this->repeat = $repeat;
     }
 }

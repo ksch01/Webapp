@@ -6,5 +6,10 @@
                 {{ error }}
         </div>
     {% endif %}
+    {% if not (success is same as false) %}
+        <div class='alert alert-success'>
+                {{ success }}
+        </div>
+    {% endif %}
     {{ form(form) }}
 {% endblock %}

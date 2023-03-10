@@ -60,7 +60,16 @@ class UserController extends AbstractController{
 
         $session = $request->getSession();
 
+        if($session->get('email') === null)
+            return $this->redirectToRoute('api_login_form');
+
         $userCredentials = new UserCredentials();
+
+        $userCredentials->setEmail($session->get('email'));
+        $userCredentials->setName($session->get('name'));
+        $userCredentials->setZip($session->get('zip'));
+        $userCredentials->setPlace($session->get('place'));
+        $userCredentials->setPhone($session->get('phone'));
 
         $form = $this->createFormBuilder($userCredentials)
             ->add('email', TextType::class)
@@ -68,21 +77,25 @@ class UserController extends AbstractController{
             ->add('zip', IntegerType::class)
             ->add('place', TextType::class)
             ->add('phone', TextType::class)
-            ->add('password', PasswordType::class)
-            ->add('repeat', PasswordType::class)
+            ->add('password', PasswordType::class, ['required' => false])
+            ->add('repeat', PasswordType::class, ['required' => false])
             ->add('submit', SubmitType::class, ['label' => 'Update'])
             ->getForm();
         $form->handleRequest($request);
         $error = false;
+        $success = false;
 
         if($form->isSubmitted() && $form->isValid()) {
+
+            $success = 'hello';
 
             return $this->render('user.html.twig', [
                 'pageTitle' => "Users",
                 'menuPoints' => $this->menuPoints,
                 'currentPoint' => '/user/view',
                 'form' => $form,
-                'error' => $error
+                'error' => $error,
+                'success' => $success
             ]);
         }
 
@@ -91,7 +104,8 @@ class UserController extends AbstractController{
             'menuPoints' => $this->menuPoints,
             'currentPoint' => '/user/view',
             'form' => $form,
-            'error' => $error
+            'error' => $error,
+            'success' => $success
         ]);
     }
 
