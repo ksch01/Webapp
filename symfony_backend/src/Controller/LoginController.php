@@ -40,44 +40,37 @@ class LoginController extends AbstractController{
         $this->service = new LoginService($repo);
     }
 
-    #[Route('/login', name: 'api_login_form', methods: ['GET'])]
-    public function loginForm(){
-        
-        $loginCredentials = new LoginCredentials();
-        
-        $form = $this->createFormBuilder($loginCredentials)
-            ->setAction($this->generateUrl('api_login_frrm'))
-            ->add('email', TextType::class)
-            ->add('password', PasswordType::class)
-            ->add('save', SubmitType::class, ['label' => 'Login'])
-            ->getForm();
-        
-        return $this->render('form.html.twig', [
-            'form' => $form
-        ]);
-    }
-
-    #[Route('/loginfromform', name: 'api_login_frrm', methods: ['GET', 'POST'])]
+    #[Route('/loginfromform', name: 'api_login_form', methods: ['GET', 'POST'])]
     public function loginFromForm(Request $request) : Response{
 
         $loginCredentials = new LoginCredentials();
 
         $form = $this->createFormBuilder($loginCredentials)
-            ->setAction($this->generateUrl('api_login_frrm'))
             ->add('email', TextType::class)
             ->add('password', PasswordType::class)
             ->add('save', SubmitType::class, ['label' => 'Login'])
             ->getForm();
 
         $form->handleRequest($request);
+        $error = '';
         if($form->isSubmitted() && $form->isValid()) {
-            $task = $form->getData();
+            $loginCreds = $form->getData();
 
-            return $this->redirectToRoute('api_login_success');
+            $user = $this->service->getVerifyUser($loginCreds->getEmail(), $loginCreds->getPassword());
+
+            if(!$user){
+                $error = "The email or password provided were invalid.";
+            }else if(!$this->service->startSession($user)){
+                $error = "This account has not yet been activated. To activate this account use the link in your email.";
+            }else{
+                return $this->redirectToRoute('api_user_form_nav');
+            }
         }
 
         return $this->render('form.html.twig', [
-            'form' => $form
+            'form' => $form,
+            'error' => $error,
+            'pagetitle' => "Login"
         ]);
     }
 

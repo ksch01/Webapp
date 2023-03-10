@@ -1,6 +1,12 @@
 {% extends "base.html.twig" %}
+
+{% block pagetitle %}
+    {{ pagetitle }}
+{% endblock %}
+
 {% block body %}
-    <div class='d-flex align-items-center justify-content-center' style='height: 100vh'>
-        {{ form(form) }}
+    <div class='alert alert-danger'>
+        {{ error }}
     </div>
+    {{ form(form) }}
 {% endblock %}

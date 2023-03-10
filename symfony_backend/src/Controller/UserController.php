@@ -40,6 +40,11 @@ class UserController extends AbstractController{
         return uniqid() . bin2hex($rand);
     }
 
+    #[Route('/userfromform/nav', name:'api_user_form_nav', methods:['GET'])]
+    public function userFromForm() : Response{
+        return new Response("TEST");
+    }
+
     #[Route('/user', name:'api_user_get', methods:['GET'])]
     public function searchUsers(UserRepository $repository, Request $request) : Response{
 
