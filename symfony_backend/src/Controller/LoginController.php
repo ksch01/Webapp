@@ -2,9 +2,9 @@
 
 namespace App\Controller;
 
-# ---------------
-# symfony imports
-# ---------------
+// ---------------
+// symfony imports
+// ---------------
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -20,9 +20,9 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 
-# ---------------
-# persist imports
-# ---------------
+// ---------------
+// persist imports
+// ---------------
 use App\Entity\User;
 use App\Entity\LoginCredentials;
 use App\Repository\UserRepository;
@@ -46,11 +46,36 @@ class LoginController extends AbstractController{
         $loginCredentials = new LoginCredentials();
         
         $form = $this->createFormBuilder($loginCredentials)
+            ->setAction($this->generateUrl('api_login_frrm'))
             ->add('email', TextType::class)
             ->add('password', PasswordType::class)
             ->add('save', SubmitType::class, ['label' => 'Login'])
             ->getForm();
         
+        return $this->render('form.html.twig', [
+            'form' => $form
+        ]);
+    }
+
+    #[Route('/loginfromform', name: 'api_login_frrm', methods: ['GET', 'POST'])]
+    public function loginFromForm(Request $request) : Response{
+
+        $loginCredentials = new LoginCredentials();
+
+        $form = $this->createFormBuilder($loginCredentials)
+            ->setAction($this->generateUrl('api_login_frrm'))
+            ->add('email', TextType::class)
+            ->add('password', PasswordType::class)
+            ->add('save', SubmitType::class, ['label' => 'Login'])
+            ->getForm();
+
+        $form->handleRequest($request);
+        if($form->isSubmitted() && $form->isValid()) {
+            $task = $form->getData();
+
+            return $this->redirectToRoute('api_login_success');
+        }
+
         return $this->render('form.html.twig', [
             'form' => $form
         ]);
@@ -86,7 +111,7 @@ class LoginController extends AbstractController{
         // --------------
         // update session
         // --------------
-        
+
         if(!$this->service->startSession($user)) throw new HttpException(403, 'not enough privileges');
 
         // ---------------------
