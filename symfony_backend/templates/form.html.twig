@@ -1,12 +1,10 @@
 {% extends "base.html.twig" %}
 
-{% block pagetitle %}
-    {{ pagetitle }}
-{% endblock %}
-
 {% block body %}
-    <div class='alert alert-danger'>
-        {{ error }}
-    </div>
+    {% if not (error is same as false) %}
+        <div class='alert alert-danger'>
+                {{ error }}
+        </div>
+    {% endif %}
     {{ form(form) }}
 {% endblock %}

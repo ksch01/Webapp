@@ -52,7 +52,7 @@ class LoginController extends AbstractController{
             ->getForm();
 
         $form->handleRequest($request);
-        $error = '';
+        $error = false;
         if($form->isSubmitted() && $form->isValid()) {
             $loginCreds = $form->getData();
 
@@ -70,7 +70,7 @@ class LoginController extends AbstractController{
         return $this->render('form.html.twig', [
             'form' => $form,
             'error' => $error,
-            'pagetitle' => "Login"
+            'pageTitle' => "Login"
         ]);
     }
 

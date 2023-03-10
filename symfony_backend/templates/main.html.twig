@@ -1,0 +1,11 @@
+{% extends "base.html.twig" %}
+
+{% block menuPoints %}
+    {% for link, menuPoint in menuPoints %}
+        <li class='nav-item'>
+            <a href={{ link }} class='nav-link text-white'>
+                {{ menuPoint }}
+            </a>
+        </li>
+    {% endfor %}
+{% endblock %}

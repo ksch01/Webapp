@@ -27,12 +27,21 @@ use App\Repository\UserGroupRepository;
 
 class UserController extends AbstractController{
 
+    private $menuPoints;
+
     private string $frontendAddress;
     private string $frontendPort;
 
     function __construct(string $frontendAddress, string $frontendPort){
         $this->frontendAddress = $frontendAddress;
         $this->frontendPort = $frontendPort;
+
+        $this->menuPoints = [
+            '/user/view' => "My Data",
+            '/user/list' => "List Users",
+            '/user/search' => "Search",
+            '/loginfromform' => "Logout"
+        ];
     }
     
     private function generateSessionKey(){
@@ -40,9 +49,12 @@ class UserController extends AbstractController{
         return uniqid() . bin2hex($rand);
     }
 
-    #[Route('/userfromform/nav', name:'api_user_form_nav', methods:['GET'])]
-    public function userFromForm() : Response{
-        return new Response("TEST");
+    #[Route('/user/view', name:'api_user_view', methods:['GET'])]
+    public function userView() : Response{
+        return $this->render('main.html.twig', [
+            'pageTitle' => "Users",
+            'menuPoints' => $this->menuPoints
+        ]);
     }
 
     #[Route('/user', name:'api_user_get', methods:['GET'])]
