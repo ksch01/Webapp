@@ -96,12 +96,11 @@ class UserService{
         $this->repo->save($user, true);
     }
 
-    public function updateUser($request, ValidatorInterface $validator){
+    public function updateUser($session, $targetemail, $email, $name, $zip, $place, $phone, $password, $group, ValidatorInterface $validator){
         
-        $invoker = $this->repo->findOneBy(['session' => $request->get('session')]);
+        $invoker = $this->repo->findOneBy(['session' => $session]);
         if(!$invoker)return false;
 
-        $targetemail = $request->get('target');
         if($targetemail == null || $targetemail = $invoker->getEmail()){
             
             $target = $invoker;
@@ -119,7 +118,6 @@ class UserService{
             return 'missing privileges';
         }
 
-        $email = $request->get('email');
         if($email != null){
             if($target->getEmail() != $email){
                 if($repository->find($email) != false){
@@ -129,22 +127,18 @@ class UserService{
             }
         }
 
-        $name = $request->get('name');
         if($name !== null){
             $target->setName($name);
         }
 
-        $zip = $request->get('zip');
         if($zip !== null){
             $target->setZip($zip);
         }
 
-        $place = $request->get('palce');
         if($place !== null){
             $target->setPlace($place);
         }
 
-        $phone = $request->get('phone');
         if($phone !== null){
             $target->setPhone($phone);
         }
@@ -158,7 +152,6 @@ class UserService{
 
         if($privileges['edit_pass']){
 
-            $password = $request->get('password');
             if($password !== null){
                 $target->setPassword($password);
             }
@@ -169,7 +162,6 @@ class UserService{
 
         if($privileges['edit_priv']){
 
-            $group = $request->get('group');
             if($group !== null){
                 $usergroup = $this->groupRepo->find($group);
                 if(!$usergroup){
@@ -207,7 +199,7 @@ class UserService{
         }
     }
 
-    public function deleteUser($sessionKey, $targetEmail){
+    public function deleteUser($sessionKey, $targetemail){
         $invoker = $this->repo->findOneBy(["session" => $sessionKey]);
         if(!$invoker || !$invoker->getUsergroup()->isPrivDelete()){
             return 'missing privileges';
@@ -218,7 +210,7 @@ class UserService{
             return'not found';
         }
 
-        $repository->remove($target, true);
+        $this->repo->remove($target, true);
     }
 
     public function validateUser($activateKey){

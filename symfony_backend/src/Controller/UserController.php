@@ -60,7 +60,7 @@ class UserController extends AbstractController{
     }
 
     #[Route('/user/view', name:'api_user_view', methods:['GET', 'POST'])]
-    public function userView(Request $request) : Response{
+    public function userView(Request $request, ValidatorInterface $validator) : Response{
 
         $session = $request->getSession();
 
@@ -91,8 +91,19 @@ class UserController extends AbstractController{
 
         if($form->isSubmitted() && $form->isValid()) {
 
-            $success = 'hello';
+            $session = $request->getSession();
 
+            $status = $this->service->updateUser($session->get('sessionKey'), null, $userCredentials->getEmail(), $userCredentials->getName(), $userCredentials->getZip(), $userCredentials->getPlace(), $userCredentials->getPhone(), $userCredentials->getPassword(), null, $validator);
+
+            if($status === true || $status === 'discarded')
+                $success = 'Updated successfully!';
+            else if($status === 'missing privileges')
+                $error = 'Not enough privileges to update user.';
+            else if($status === 'conflict')
+                $error = 'The given email is already in use.';
+            else 
+                $error = 'An error occured. Please try again later.';
+            
             return $this->render('user.html.twig', [
                 'pageTitle' => "Users",
                 'menuPoints' => $this->menuPoints,
@@ -155,7 +166,7 @@ class UserController extends AbstractController{
             throw new BadRequestHttpException('update user requests require the session request parameter to be set');
         }
 
-        $status = $this->service->updateUser($request->request, $validator);
+        $status = $this->service->updateUser($sessionKey, $request->request->get('targetemail'), $request->request->get('email'), $request->request->get('name'), $request->request->get('zip'), $request->request->get('place'), $request->request->get('phone'), $request->request->get('passwort'), $request->request->get('group'), $validator);
 
         $response = new Response();
 
