@@ -255,8 +255,8 @@
 
     function erase(){
         const params = new URLSearchParams()
-        params.append('id', props.invoker)
-        params.append('email', props.user.email)
+        params.append('session', props.invoker)
+        params.append('target', props.user.email)
 
         isEraseCheck.value = false
         isErasing.value = true
