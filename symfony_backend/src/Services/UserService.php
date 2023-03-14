@@ -33,7 +33,7 @@ class UserService{
         return uniqid() . bin2hex($rand);
     }
 
-    public function searchUsers($query){
+    public function searchUsers($query, int $page=0, int $pageSize=0, string $sortCriteria='email', bool $sortAsc=true){
         $email = $query->get('email', '');
         $name = $query->get('name', '');
         $zip = $query->get('zip', '');
@@ -50,6 +50,53 @@ class UserService{
         foreach($users as $key=>$value){
             $users[$key] = new UserPrep($value);
         }
+
+        $this->sortUsers($users, $sortCriteria, $sortAsc);
+
+        if($pageSize !== 0){
+            $chunks = array_chunk($users, $pageSize, true);
+            if(!array_key_exists($page, $chunks)){
+                return ['result' => [], 'total' => sizeof($users)];
+            }else{
+                return ['result' => $chunks[$page], 'total' => sizeof($users)];
+            }
+        }
+
+        return $users;
+    }
+
+    public function sortUsers(array $users, string $sortCriteria='email', bool $ascending=true) : array {
+
+        $compare = null;
+
+        if($sortCriteria === 'email'){
+            $compare = function($userA, $userB){
+                return strcmp($userA->getEmail(), $userB->getEmail());
+            };
+        }else if($sortCriteria === 'name'){
+            $compare = function($userA, $userB){
+                return strcmp($userA->getName(), $userB->getName());
+            };
+        }else if($sortCriteria === 'zip'){
+            $compare = function($userA, $userB){
+                return $user->getZip() - $userB->getZip();
+            };
+        }else if($sortCriteria === 'place'){
+            $compare = function($userA, $userB){
+                return strcmp($userA->getPlace(), $userB->getPlace());
+            };
+        }else if($sortCriteria === 'phone'){
+            $compare = function($userA, $userB){
+                return strcmp($userA->getPhone(), $userB->getPhone());
+            };
+        }
+
+        if($compare === null)throw new Exception("unknown sort criteria for sort users: \"" . $sortCriteria . "\"");
+
+        uasort($users, $compare);
+
+        if(!$ascending)
+            array_reverse($users);
 
         return $users;
     }

@@ -63,7 +63,6 @@ class UserController extends AbstractController{
     public function userView(Request $request, ValidatorInterface $validator) : Response{
 
         $session = $request->getSession();
-
         if($session->get('email') === null)
             return $this->redirectToRoute('api_login_form');
 
@@ -90,8 +89,6 @@ class UserController extends AbstractController{
         $success = false;
 
         if($form->isSubmitted() && $form->isValid()) {
-
-            $session = $request->getSession();
 
             $status = $this->service->updateUser($session->get('sessionKey'), null, $userCredentials->getEmail(), $userCredentials->getName(), $userCredentials->getZip(), $userCredentials->getPlace(), $userCredentials->getPhone(), $userCredentials->getPassword(), null, $validator);
 
@@ -121,6 +118,33 @@ class UserController extends AbstractController{
             'form' => $form,
             'error' => $error,
             'success' => $success
+        ]);
+    }
+
+    #[Route('/user/list', name:'api_user_list', methods:['GET'])]
+    public function userList(Request $request) : Response {
+
+        $session = $request->getSession();
+        if($session->get('email') === null)
+            return $this->redirectToRoute('api_login_form');
+
+        $page = $request->query->get('page', 0);
+        $sort = $request->query->get('sort', 'email');
+        $sdir = $request->query->get('sdir', true);
+        
+        $search = $this->service->searchUsers($request->query, $page, 16, $sort, $sdir);
+
+        $users = $search['result'];
+        $total = $search['total'];
+
+        return $this->render('list.html.twig', [
+            'pageTitle' => "Users",
+            'menuPoints' => $this->menuPoints,
+            'currentPoint' => '/user/list',
+            'users' => $users,
+            'page' => $page,
+            'chunk' => 16,
+            'total' => $total
         ]);
     }
 

@@ -1,0 +1,54 @@
+{% extends "main.html.twig" %}
+
+{% block body %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Email</th>
+                <th scope="col">Name</th>
+                <th scope="col">Zip</th>
+                <th scope="col">Place</th>
+                <th scope="col">Phone</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{user.email}}</td>
+                <td>{{user.name}}</td>
+                <td>{{user.zip}}</td>
+                <td>{{user.place}}</td>
+                <td>{{user.phone}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <nav>
+        <ul class="pagination">
+            {% if page > 1  %}
+            <li class="page-item"><a class="page-link" href="/user/list">
+                <span aria-hidden="true">&laquo;</span>
+                <span class="sr-only"></span>
+            </a></li>
+            {% endif %}
+
+            {% for i in 0..(total - 1) %}
+                {% if i is divisible by chunk %}
+                    {% if i/chunk == page %}
+                        <li class="page-item active"><a class="page-link" href="#">{{i / chunk + 1}}</a></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href={{"?page=" ~ i / chunk}}>{{i / chunk + 1}}</a></li>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            {% if page < (total) / chunk - 2 %}
+            <li class="page-item"><a class="page-link" href="#">
+                <span aria-hidden="true">&raquo;</span>
+                <span class="sr-only"></span>
+            </a></li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endblock %}
