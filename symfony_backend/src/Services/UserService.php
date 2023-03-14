@@ -51,7 +51,7 @@ class UserService{
             $users[$key] = new UserPrep($value);
         }
 
-        $this->sortUsers($users, $sortCriteria, $sortAsc);
+        $users = $this->sortUsers($users, $sortCriteria, $sortAsc);
 
         if($pageSize !== 0){
             $chunks = array_chunk($users, $pageSize, true);
@@ -71,29 +71,29 @@ class UserService{
 
         if($sortCriteria === 'email'){
             $compare = function($userA, $userB){
-                return strcmp($userA->getEmail(), $userB->getEmail());
+                return strcasecmp($userA->getEmail(), $userB->getEmail());
             };
         }else if($sortCriteria === 'name'){
             $compare = function($userA, $userB){
-                return strcmp($userA->getName(), $userB->getName());
+                return strcasecmp($userA->getName(), $userB->getName());
             };
         }else if($sortCriteria === 'zip'){
             $compare = function($userA, $userB){
-                return $user->getZip() - $userB->getZip();
+                return $userA->getZip() - $userB->getZip();
             };
         }else if($sortCriteria === 'place'){
             $compare = function($userA, $userB){
-                return strcmp($userA->getPlace(), $userB->getPlace());
+                return strcasecmp($userA->getPlace(), $userB->getPlace());
             };
         }else if($sortCriteria === 'phone'){
             $compare = function($userA, $userB){
-                return strcmp($userA->getPhone(), $userB->getPhone());
+                return strcasecmp($userA->getPhone(), $userB->getPhone());
             };
         }
 
         if($compare === null)throw new Exception("unknown sort criteria for sort users: \"" . $sortCriteria . "\"");
 
-        uasort($users, $compare);
+        usort($users, $compare);
 
         if(!$ascending)
             array_reverse($users);

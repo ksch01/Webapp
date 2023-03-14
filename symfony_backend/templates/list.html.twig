@@ -1,14 +1,25 @@
 {% extends "main.html.twig" %}
 
 {% block body %}
+    {% set queryParams = app.request.query.all %}
+
     <table class="table">
         <thead>
             <tr>
-                <th scope="col">Email</th>
-                <th scope="col">Name</th>
-                <th scope="col">Zip</th>
-                <th scope="col">Place</th>
-                <th scope="col">Phone</th>
+                {% set initialParams = queryParams %}
+
+                {% set queryParams = queryParams|merge({'sort': 'email'}) %}
+                <th scope="col"><a href={{'?' ~ queryParams|url_encode}}>Email</a></th>
+                {% set queryParams = queryParams|merge({'sort': 'name'}) %}
+                <th scope="col"><a href={{'?' ~ queryParams|url_encode}}>Name</a></th>
+                {% set queryParams = queryParams|merge({'sort': 'zip'}) %}
+                <th scope="col"><a href={{'?' ~ queryParams|url_encode}}>Zip</a></th>
+                {% set queryParams = queryParams|merge({'sort': 'place'}) %}
+                <th scope="col"><a href={{'?' ~ queryParams|url_encode}}>Place</a></th>
+                {% set queryParams = queryParams|merge({'sort': 'phone'}) %}
+                <th scope="col"><a href={{'?' ~ queryParams|url_encode}}>Phone</a></th>
+
+                {% set queryParams = initialParams %}
             </tr>
         </thead>
         <tbody>
@@ -26,11 +37,12 @@
 
     <nav>
         <ul class="pagination">
-            {% if page > 1  %}
-            <li class="page-item"><a class="page-link" href="/user/list">
-                <span aria-hidden="true">&laquo;</span>
-                <span class="sr-only"></span>
-            </a></li>
+            {% if page > 1 %}
+                {% set queryParams = queryParams|merge({'page': '0'}) %}
+                <li class="page-item"><a class="page-link" href={{'?' ~ queryParams|url_encode}}>
+                    <span aria-hidden="true">&laquo;</span>
+                    <span class="sr-only"></span>
+                </a></li>
             {% endif %}
 
             {% for i in 0..(total - 1) %}
@@ -38,16 +50,18 @@
                     {% if i/chunk == page %}
                         <li class="page-item active"><a class="page-link" href="#">{{i / chunk + 1}}</a></li>
                     {% else %}
-                        <li class="page-item"><a class="page-link" href={{"?page=" ~ i / chunk}}>{{i / chunk + 1}}</a></li>
+                        {% set queryParams = queryParams|merge({'page': (i / chunk)}) %}
+                        <li class="page-item"><a class="page-link" href={{'?' ~ queryParams|url_encode}}>{{i / chunk + 1}}</a></li>
                     {% endif %}
                 {% endif %}
             {% endfor %}
 
-            {% if page < (total) / chunk - 2 %}
-            <li class="page-item"><a class="page-link" href="#">
-                <span aria-hidden="true">&raquo;</span>
-                <span class="sr-only"></span>
-            </a></li>
+            {% if page < total / chunk - 2 %}
+                {% set queryParams = queryParams|merge({'page': ((total - 1)/chunk)}) %}
+                <li class="page-item"><a class="page-link" href={{'?' ~ queryParams|url_encode}}>
+                    <span aria-hidden="true">&raquo;</span>
+                    <span class="sr-only"></span>
+                </a></li>
             {% endif %}
         </ul>
     </nav>
