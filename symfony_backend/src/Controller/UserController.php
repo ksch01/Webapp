@@ -26,6 +26,7 @@ use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 use App\Entity\User;
+use App\Entity\UserSearch;
 use App\Entity\UserCredentials;
 use App\Repository\UserRepository;
 use App\Repository\UserGroupRepository;
@@ -111,7 +112,7 @@ class UserController extends AbstractController{
             ]);
         }
 
-        return $this->render('user.html.twig', [
+        return $this->render('mainform.html.twig', [
             'pageTitle' => "Users",
             'menuPoints' => $this->menuPoints,
             'currentPoint' => '/user/view',
@@ -147,6 +148,48 @@ class UserController extends AbstractController{
             'sasc' => $sdir,
             'chunk' => 16,
             'total' => $total
+        ]);
+    }
+
+    #[Route('/user/search', name:'api_user_search', methods:['GET', 'POST'])]
+    public function userSearch(Request $request) : Response{
+        
+        $session = $request->getSession();
+        if($session->get('email') === null)
+            return $this->redirectToRoute('api_login_form');
+        
+        $searchUser = new UserSearch();
+    
+        $searchUser->setEmail("");
+        $searchUser->setName("");
+        $searchUser->setZip("");
+        $searchUser->setPlace("");
+        $searchUser->setPhone("");
+
+        $form = $this->createFormBuilder($searchUser)
+            ->add('email', TextType::class, ['required' => false])
+            ->add('name', TextType::class, ['required' => false])
+            ->add('zip', TextType::class, ['required' => false])
+            ->add('place', TextType::class, ['required' => false])
+            ->add('phone', TextType::class, ['required' => false])
+            ->add('submit', SubmitType::class, ['label' => 'Search'])
+            ->getForm();
+        $form->handleRequest($request);
+
+        $error = false;
+        $success = false;
+
+        if($form->isSubmitted() && $form->isValid()) {
+            return $this->redirectToRoute('api_user_list', ['email' => $searchUser->getEmail(), 'name' => $searchUser->getName(), 'zip' => $searchUser->getZip(), 'place' => $searchUser->getPlace(), 'phone' => $searchUser->getPhone()]);
+        }
+        
+        return $this->render('mainform.html.twig', [
+            'pageTitle' => "Users",
+            'menuPoints' => $this->menuPoints,
+            'currentPoint' => '/user/search',
+            'form' => $form,
+            'error' => $error,
+            'success' => $success
         ]);
     }
 
