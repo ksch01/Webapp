@@ -96,7 +96,7 @@ class UserService{
         usort($users, $compare);
 
         if(!$ascending)
-            array_reverse($users);
+            $users = array_reverse($users);
 
         return $users;
     }

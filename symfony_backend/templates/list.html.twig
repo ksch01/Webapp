@@ -9,14 +9,38 @@
                 {% set initialParams = queryParams %}
 
                 {% set queryParams = queryParams|merge({'sort': 'email'}) %}
+                {% set queryParams = queryParams|merge({'sasc': true}) %}
+                {% if sort == 'email' and sasc %}
+                        {% set queryParams = queryParams|merge({'sasc': false}) %}
+                {% endif %}
                 <th scope="col"><a href={{'?' ~ queryParams|url_encode}}>Email</a></th>
+
                 {% set queryParams = queryParams|merge({'sort': 'name'}) %}
+                {% set queryParams = queryParams|merge({'sasc': true}) %}
+                {% if sort == 'name' and sasc %}
+                        {% set queryParams = queryParams|merge({'sasc': false}) %}
+                {% endif %}
                 <th scope="col"><a href={{'?' ~ queryParams|url_encode}}>Name</a></th>
+
                 {% set queryParams = queryParams|merge({'sort': 'zip'}) %}
+                {% set queryParams = queryParams|merge({'sasc': true}) %}
+                {% if sort == 'zip' and sasc %}
+                        {% set queryParams = queryParams|merge({'sasc': false}) %}
+                {% endif %}
                 <th scope="col"><a href={{'?' ~ queryParams|url_encode}}>Zip</a></th>
+
                 {% set queryParams = queryParams|merge({'sort': 'place'}) %}
+                {% set queryParams = queryParams|merge({'sasc': true}) %}
+                {% if sort == 'place' and sasc %}
+                        {% set queryParams = queryParams|merge({'sasc': false}) %}
+                {% endif %}
                 <th scope="col"><a href={{'?' ~ queryParams|url_encode}}>Place</a></th>
+
                 {% set queryParams = queryParams|merge({'sort': 'phone'}) %}
+                {% set queryParams = queryParams|merge({'sasc': true}) %}
+                {% if sort == 'phone' and sasc %}
+                        {% set queryParams = queryParams|merge({'sasc': false}) %}
+                {% endif %}
                 <th scope="col"><a href={{'?' ~ queryParams|url_encode}}>Phone</a></th>
 
                 {% set queryParams = initialParams %}

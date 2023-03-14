@@ -130,7 +130,7 @@ class UserController extends AbstractController{
 
         $page = $request->query->get('page', 0);
         $sort = $request->query->get('sort', 'email');
-        $sdir = $request->query->get('sdir', true);
+        $sdir = $request->query->get('sasc', true);
         
         $search = $this->service->searchUsers($request->query, $page, 16, $sort, $sdir);
 
@@ -143,6 +143,8 @@ class UserController extends AbstractController{
             'currentPoint' => '/user/list',
             'users' => $users,
             'page' => $page,
+            'sort' => $sort,
+            'sasc' => $sdir,
             'chunk' => 16,
             'total' => $total
         ]);
