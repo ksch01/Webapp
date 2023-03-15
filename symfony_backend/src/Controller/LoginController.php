@@ -25,7 +25,7 @@ use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 // persist imports
 // ---------------
 use App\Entity\User;
-use App\Entity\LoginCredentials;
+use App\Entity\Form\LoginCredentials;
 use App\Repository\UserRepository;
 
 use App\Services\LoginService;

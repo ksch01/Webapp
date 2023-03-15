@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\Form;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -25,12 +25,6 @@ class UserCredentials
     #[Assert\NotBlank]
     #[Assert\Regex('/^[[:digit:]]{9,12}$/')]
     protected $phone = '';
-
-    #[Assert\Length(min: 8)]
-    protected $password = '';
-
-    #[Assert\Expression('this.getRepeat() == this.getPassword()')]
-    protected $repeat = '';
 
     public function getEmail() : string{
         return $this->email;
@@ -70,22 +64,6 @@ class UserCredentials
 
     public function setPhone(string $phone){
         $this->phone = $phone;
-    }
-
-    public function getPassword(){
-        return $this->password;
-    }
-
-    public function setPassword($password){
-        $this->password = $password;
-    }
-
-    public function getRepeat(){
-        return $this->repeat;
-    }
-
-    public function setRepeat($repeat){
-        $this->repeat = $repeat;
     }
 }
 

@@ -230,6 +230,12 @@ class UserService{
         }
     }
 
+    public function getUserPrivileges($email, $self=false){
+        $user = $this->repo->find($email);
+        if($user == null)return null;
+        return $this->getPrivileges($user, $self);
+    }
+
     private function getPrivileges(User $user, $self =false){
         if($self){
             return [
@@ -273,6 +279,10 @@ class UserService{
         $repository->flush();
 
         return true;
+    }
+
+    public function getUser($email){
+        return $this->repo->find($email);
     }
 
     public function getUsergroup($groupName){

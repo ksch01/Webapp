@@ -49,7 +49,7 @@
         <tbody>
             {% for user in users %}
             <tr>
-                <td>{{user.email}}</td>
+                <td><a href={{ "edit?targetemail=" ~ user.email }}>{{user.email}}</a></td>
                 <td>{{user.name}}</td>
                 <td>{{user.zip}}</td>
                 <td>{{user.place}}</td>
