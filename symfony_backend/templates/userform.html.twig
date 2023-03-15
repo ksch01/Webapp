@@ -1,0 +1,51 @@
+{% extends "main.html.twig" %}
+
+{% block body %}
+    {% if not (error is same as false) %}
+        <div class='alert alert-danger'>
+                {{ error }}
+        </div>
+    {% endif %}
+    {% if not (success is same as false) %}
+        <div class='alert alert-success'>
+                {{ success }}
+        </div>
+    {% endif %}
+
+    {{ form_start(form) }}
+        <div>
+            {{ form_errors(form) }}
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <div class="border rounded px-2 mb-1">
+                    {{ form_row(form.userdata.credentials) }}
+                </div>
+                {% if form.userdata.password.password is defined %}
+                    <div class="border rounded px-2 mb-1">
+                        {{ form_row(form.userdata.password) }}
+                    </div>
+                {% else %}
+                    <div style="display: none">
+                        {{ form_row(form.userdata.password) }}
+                    </div>
+                {% endif %}
+
+                {% if form.userdata.usergroup.group is defined %}
+                    <div class="border rounded px-2 mb-1">
+                        {{ form_row(form.userdata.usergroup) }}
+                    </div>
+                {% else %}
+                    <div style="display: none">
+                        {{ form_row(form.userdata.usergroup) }}
+                    </div>
+                {% endif %}
+
+                {% if form.userdata.update is defined %}
+                    {{ form_row(form.userdata.update) }}
+                {% endif %}
+            </div>
+        </div>
+    {{ form_end(form) }}
+{% endblock %}

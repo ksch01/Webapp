@@ -5,7 +5,12 @@ namespace App\Services;
 use App\Entity\User;
 use App\Entity\UserPrep;
 use App\Repository\UserRepository;
-use APP\Repository\UserGroupRepository;
+use App\Repository\UserGroupRepository;
+
+use App\Entity\Form\UserData;
+use App\Entity\Form\UserCredentials;
+use App\Entity\Form\UserPassword;
+use App\Entity\Form\UserPrivileges;
 
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
@@ -143,6 +148,13 @@ class UserService{
         $this->repo->save($user, true);
     }
 
+    public function updateUserWithData($session, $targetemail, UserData $user, ValidatorInterface $validator){
+        $credentials = $user->getCredentials();
+        $password = $user->getPassword();
+        $group = $user->getGroup();
+
+        return $updateUser($session, $targetemail, $credentials->getEmail(), $credentials->getName(), $credentials->getZip(), $credentials->getPlace(), $credentials->getPhone(), $password->getPassword, $group->getGroup(), $validator);
+    }
     public function updateUser($session, $targetemail, $email, $name, $zip, $place, $phone, $password, $group, ValidatorInterface $validator){
         
         $invoker = $this->repo->findOneBy(['session' => $session]);
@@ -202,7 +214,7 @@ class UserService{
             if($password !== null){
                 $target->setPassword($password);
             }
-        }else if($request->request->get('password') !== null){
+        }else if($password !== null){
 
             $discarded = true;
         }
@@ -216,7 +228,7 @@ class UserService{
                 }
                 $target->setUsergroup($usergroup);
             }
-        }else if($request->request->get('group') !== null){
+        }else if($group !== null){
 
             $discarded = true;
         }

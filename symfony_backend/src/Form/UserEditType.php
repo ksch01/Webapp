@@ -19,7 +19,7 @@ class UserEditType extends AbstractType{
 
         $builder
             ->add('credentials', CredentialsType::class, ['disabled' => !$privileges['edit_cred']])
-            ->add('password', PasswordRType::class, ['hidden' => !$privileges['edit_pass']])
+            ->add('password', PasswordRType::class, ['hidden' => !$privileges['edit_pass'], 'required' => false])
             ->add('usergroup', UsergroupType::class, ['hidden' => !$privileges['edit_priv']])
         ;
 

@@ -14,15 +14,10 @@ class PasswordRType extends AbstractType{
     
     public function buildForm(FormBuilderInterface $builder, array $options) : void {
 
-        if($options['hidden'] === null)
-            $options['hidden'] = false;
-        if($options['disabled'] === null)
-            $options['disabled'] = false;
-
         if(!$options['hidden']){
             $builder
-                ->add('password', PasswordType::class, ['disabled' => $options['disabled']])
-                ->add('repeat', PasswordType::class, ['disabled' => $options['disabled']])
+                ->add('password', PasswordType::class, ['disabled' => $options['disabled'], 'required' => $options['required']])
+                ->add('repeat', PasswordType::class, ['disabled' => $options['disabled'], 'required' => $options['required']])
             ;
         }
     }
@@ -30,7 +25,8 @@ class PasswordRType extends AbstractType{
     public function configureOptions(OptionsResolver $resolver) : void {
         $resolver->setDefaults([
             'data_class' => UserPassword::class,
-            'hidden' => false
+            'hidden' => false,
+            'disabled' => false
         ]);
     }
 }

@@ -19,11 +19,12 @@ use Symfony\Component\Mime\Email;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 use App\Entity\User;
-use App\Entity\UserSearch;
+use App\Entity\Form\UserSearch;
 
 use App\Entity\Form\UserData;
 use App\Entity\Form\UserDataWrapper;
@@ -79,22 +80,26 @@ class UserController extends AbstractController{
             return $this->redirectToRoute('api_login_form');
         }
 
-        $userCredentials = new UserCredentials();
+        $formData = $this->getUserForm(
+            $invokerPrivileges, 
+            $session->get('email'), 
+            $session->get('name'), 
+            $session->get('zip'), 
+            $session->get('place'), 
+            $session->get('phone'), 
+            $session->get('group')
+        );
 
-        $userCredentials->setEmail($session->get('email'));
-        $userCredentials->setName($session->get('name'));
-        $userCredentials->setZip($session->get('zip'));
-        $userCredentials->setPlace($session->get('place'));
-        $userCredentials->setPhone($session->get('phone'));
+        $form = $formData['form'];
+        $userData = $formData['data'];
 
-        $form = $this->getUserForm($userCredentials, $invokerPrivileges);
         $form->handleRequest($request);
         $error = false;
         $success = false;
 
         if($form->isSubmitted() && $form->isValid()) {
 
-            $status = $this->service->updateUser($session->get('sessionKey'), null, $userCredentials->getEmail(), $userCredentials->getName(), $userCredentials->getZip(), $userCredentials->getPlace(), $userCredentials->getPhone(), $userCredentials->getPassword(), null, $validator);
+            $status = $this->service->updateUserWithData($session->get('sessionKey'), null, $userData, $validator);
 
             if($status === true || $status === 'discarded')
                 $success = 'Updated successfully!';
@@ -105,7 +110,7 @@ class UserController extends AbstractController{
             else 
                 $error = 'An error occured. Please try again later.';
             
-            return $this->render('user.html.twig', [
+            return $this->render('userform.html.twig', [
                 'pageTitle' => "Users",
                 'menuPoints' => $this->menuPoints,
                 'currentPoint' => '/user/view',
@@ -115,7 +120,7 @@ class UserController extends AbstractController{
             ]);
         }
 
-        return $this->render('mainform.html.twig', [
+        return $this->render('userform.html.twig', [
             'pageTitle' => "Users",
             'menuPoints' => $this->menuPoints,
             'currentPoint' => '/user/view',
@@ -138,27 +143,23 @@ class UserController extends AbstractController{
             return $this->redirectToRoute('api_login_form');
         }
 
-        $userCredentials = new UserCredentials();
-
         $targetemail = $request->query->get('targetemail');
         if($targetemail == null)throw new BadRequestHttpException('edit user requests require the targetemail query parameter to be set');
         $target = $this->service->getUser($targetemail);
         if($target == null)throw new NotFoundHttpException('target user for edit user request not found');
 
-        $userCredentials->setEmail($target->getEmail());
-        $userCredentials->setName($target->getName());
-        $userCredentials->setZip($target->getZip());
-        $userCredentials->setPlace($target->getPlace());
-        $userCredentials->setPhone($target->getPhone());
+        $formData = $this->getUserForm($invokerPrivileges, $target->getEmail(), $target->getName(), $target->getZip(), $target->getPlace(), $target->getPhone(), $target->getUsergroup()->getName(), $target->getUsergroup());
+        
+        $form = $formData['form'];
+        $userData = $formData['data'];
 
-        $form = $this->getUserForm($userCredentials, $invokerPrivileges);
         $form->handleRequest($request);
         $error = false;
         $success = false;
 
         if($form->isSubmitted() && $form->isValid()) {
 
-            $status = $this->service->updateUser($session->get('sessionKey'), null, $userCredentials->getEmail(), $userCredentials->getName(), $userCredentials->getZip(), $userCredentials->getPlace(), $userCredentials->getPhone(), $userCredentials->getPassword(), null, $validator);
+            $status = $this->service->updateUserWithData($session->get('sessionKey'), $targetemail, $userData, $validator);
 
             if($status === true || $status === 'discarded')
                 $success = 'Updated successfully!';
@@ -169,7 +170,7 @@ class UserController extends AbstractController{
             else 
                 $error = 'An error occured. Please try again later.';
             
-            return $this->render('user.html.twig', [
+            return $this->render('userform.html.twig', [
                 'pageTitle' => "Users",
                 'menuPoints' => $this->menuPoints,
                 'currentPoint' => '/user/view',
@@ -179,7 +180,7 @@ class UserController extends AbstractController{
             ]);
         }
 
-        return $this->render('mainform.html.twig', [
+        return $this->render('userform.html.twig', [
             'pageTitle' => "Users",
             'menuPoints' => $this->menuPoints,
             'currentPoint' => '/user/list',
@@ -189,18 +190,33 @@ class UserController extends AbstractController{
         ]);
     }
 
-    private function getUserForm($userCredentials, $invokerPrivileges){
+    private function getUserForm($invokerPrivileges, $email = "", $name = "", $zip = "", $place = "", $phone = "", $group = ""){
 
         $userData = new UserData();
 
+        $userCredentials = new UserCredentials();
+        $userCredentials->setEmail($email);
+        $userCredentials->setName($name);
+        $userCredentials->setZip($zip);
+        $userCredentials->setPlace($place);
+        $userCredentials->setPhone($phone);
+
+        $userPrivileges = new UserPrivileges();
+        $userPrivileges->setGroup($group);
+
         $userData->setCredentials($userCredentials);
         $userData->setPassword(new UserPassword());
-        $userData->setUsergroup(new UserPrivileges());
+        $userData->setUsergroup($userPrivileges);
 
-        return $this->createFormBuilder($userData)
+        $form = $this->createFormBuilder($userData)
             ->add('userdata', UserEditType::class, ['privileges' => $invokerPrivileges])
             ->getForm()
         ;
+
+        return [
+            'form' => $form,
+            'data' => $userData
+        ];
     }
 
     #[Route('/user/list', name:'api_user_list', methods:['GET'])]
@@ -258,7 +274,6 @@ class UserController extends AbstractController{
         $form->handleRequest($request);
 
         $error = false;
-        $success = false;
 
         if($form->isSubmitted() && $form->isValid()) {
             return $this->redirectToRoute('api_user_list', ['email' => $searchUser->getEmail(), 'name' => $searchUser->getName(), 'zip' => $searchUser->getZip(), 'place' => $searchUser->getPlace(), 'phone' => $searchUser->getPhone()]);
@@ -269,8 +284,7 @@ class UserController extends AbstractController{
             'menuPoints' => $this->menuPoints,
             'currentPoint' => '/user/search',
             'form' => $form,
-            'error' => $error,
-            'success' => $success
+            'error' => $error
         ]);
     }
 

@@ -72,6 +72,7 @@ class LoginController extends AbstractController{
                 $session->set('zip', $user->getZip());
                 $session->set('place', $user->getPlace());
                 $session->set('phone', $user->getPhone());
+                $session->set('group', $user->getUsergroup()->getName());
                 $session->set('sessionKey', $user->getSession());
 
                 return $this->redirectToRoute('api_user_view');

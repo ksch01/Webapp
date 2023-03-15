@@ -21,7 +21,7 @@ class UsergroupType extends AbstractType{
             $options['disabled'] = false;
             
         if(!$options['hidden']){
-            $builder->add('group', ChoiceType::class, ['choices' => UserPrivileges::GROUPS, 'disabled' => $options['disabled']]);
+            $builder->add('group', ChoiceType::class, ['choices' => UserPrivileges::GROUPS_KV, 'disabled' => $options['disabled']]);
         }
     }
 
