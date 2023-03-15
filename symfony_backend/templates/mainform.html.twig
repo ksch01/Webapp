@@ -11,5 +11,32 @@
                 {{ success }}
         </div>
     {% endif %}
-    {{ form(form) }}
+
+    {{ form_start(form) }}
+        <div>
+            {{ form_errors(form) }}
+        </div>
+
+        <div class="row">
+            <div class="col">
+                {{ form_row(form.userdata.credentials) }}
+                {% if form.userdata.password.password is defined %}
+                    {{ form_row(form.userdata.password) }}
+                {% else %}
+                    <div style="display: none">
+                        {{ form_row(form.userdata.password) }}
+                    </div>
+                {% endif %}
+
+                {% if form.userdata.usergroup.group is defined %}
+                    {{ form_row(form.userdata.usergroup) }}
+                {% else %}
+                    <div style="display: none">
+                        {{ form_row(form.userdata.usergroup) }}
+                    </div>
+                {% endif %}
+                {{ form_row(form.userdata.update) }}
+            </div>
+        </div>
+    {{ form_end(form) }}
 {% endblock %}

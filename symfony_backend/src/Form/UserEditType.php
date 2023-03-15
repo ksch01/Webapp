@@ -4,6 +4,8 @@ namespace App\Form;
 
 use App\Entity\Form\UserData;
 
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 
@@ -20,6 +22,9 @@ class UserEditType extends AbstractType{
             ->add('password', PasswordRType::class, ['hidden' => !$privileges['edit_pass']])
             ->add('usergroup', UsergroupType::class, ['hidden' => !$privileges['edit_priv']])
         ;
+
+        if($privileges['edit_cred'] || $privileges['edit_pass'] || $privileges['edit_priv'])
+            $builder->add('update', SubmitType::class);
     }
 
     public function configureOptions(OptionsResolver $resolver) : void {
