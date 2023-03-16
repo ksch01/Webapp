@@ -1,93 +1,51 @@
-{% extends "main.html.twig" %}
+{{ form_start(form, {'attr': {'style' : "width: 16em"}}) }}
 
-{% block body %}
-    {% if not (error is same as false) %}
-        <div class='alert alert-danger'>
-                {{ error }}
-        </div>
-    {% endif %}
-    {% if not (success is same as false) %}
-        <div class='alert alert-success'>
-                {{ success }}
-        </div>
-    {% endif %}
+    {{ form_row(form._token) }}
+    {{ form_errors(form) }}
+    
+    <div class="row">
+        <div class="col">
 
-    {{ form_start(form) }}
-        <div class="row">
-            <div class="col">
-                {% if form.userdata.credentials.email is defined %}
-                {{ form_start(form.userdata.credentials) }}
-                    <div class="border rounded px-2 mb-1 mt-n3">
-                        {{ form_label(form.userdata.credentials, "Credentials", {'label_attr' : {'class' : "border-bottom"}}) }}
-                        {{ form_row(form.userdata.credentials.email) }}
-                        {{ form_row(form.userdata.credentials.name) }}
-                        {{ form_row(form.userdata.credentials.zip) }}
-                        {{ form_row(form.userdata.credentials.place) }}
-                        {{ form_row(form.userdata.credentials.phone) }}
-                    </div>
-                {{ form_end(form.userdata.credentials) }}
-                {% endif %}
-
-                {% if form.userdata.password.password is defined %}
-                {{ form_start(form.userdata.password) }}
-                    <div class="border rounded px-2 mb-1 mt-n3">
-                        {{ form_row(form.userdata.password.password) }}
-                        {{ form_row(form.userdata.password.repeat) }}
-                    </div>
-                {{ form_end(form.userdata.password) }}
-                {% endif %}
-
-                {% if form.userdata.usergroup.group is defined %}
-                {{ form_start(form.userdata.usergroup) }}
-                    <div class="border rounded px-2 mb-1 mt-n3">
-                        {{ form_row(form.userdata.usergroup.group) }}
-                    </div>
-                {{ form_end(form.userdata.usergroup) }}
-                {% endif %}
-
-                {% if form.userdata.update is defined %}
-                    {{ form_row(form.userdata.update) }}
-                {% endif %}
-
-                {% do form.userdata.setRendered %}
-            </div>
-        </div>
-    {{ form_end(form) }}
-
-    {#{ form(form) }#}
-
-    {#
-    {{ form_start(form) }}
-        <div class="row">
-            <div class="col">
-                <div class="border rounded px-2 mb-1">
-                    {{ form(form.userdata.credentials) }}
+            {% if form.userdata.credentials.email is defined %}
+            {{ form_start(form.userdata.credentials) }}
+                <div class="border rounded px-2 mb-1 mt-n3">
+                    {{ form_label(form.userdata.credentials, "Credentials", {'label_attr' : {'class' : "border-bottom h2"}}) }}
+                    {{ form_row(form.userdata.credentials.email) }}
+                    {{ form_row(form.userdata.credentials.name) }}
+                    {{ form_row(form.userdata.credentials.zip) }}
+                    {{ form_row(form.userdata.credentials.place) }}
+                    {{ form_row(form.userdata.credentials.phone) }}
                 </div>
-                {% if form.userdata.password.password is defined %}
-                    <div class="border rounded px-2 mb-1">
-                        {{ form(form.userdata.password) }}
-                    </div>
-                {% else %}
-                    <div style="display: none">
-                        {{ form(form.userdata.password) }}
-                    </div>
-                {% endif %}
+            {{ form_end(form.userdata.credentials) }}
+            {% endif %}
 
-                {% if form.userdata.usergroup.group is defined %}
-                    <div class="border rounded px-2 mb-1">
-                        {{ form(form.userdata.usergroup) }}
-                    </div>
-                {% else %}
-                    <div style="display: none">
-                        {{ form(form.userdata.usergroup) }}
-                    </div>
-                {% endif %}
+            {% if form.userdata.password.password is defined %}
+            {{ form_start(form.userdata.password) }}
+                <div class="border rounded px-2 mb-1 mt-n3">
+                    {{ form_row(form.userdata.password.password) }}
+                    {{ form_row(form.userdata.password.repeat) }}
+                </div>
+            {{ form_end(form.userdata.password) }}
+            {% endif %}
 
-                {% if form.userdata.update is defined %}
-                    {{ form_row(form.userdata.update) }}
-                {% endif %}
-            </div>
+            {% if form.userdata.usergroup.group is defined %}
+            {{ form_start(form.userdata.usergroup) }}
+                <div class="border rounded px-2 mb-1 mt-n3">
+                    {{ form_row(form.userdata.usergroup.group) }}
+                </div>
+            {{ form_end(form.userdata.usergroup) }}
+            {% endif %}
+
+            {% if form.userdata.agree is defined %}
+                {{ form_row(form.userdata.agree) }}
+            {% endif %}
+
+            {% if form.userdata.submit is defined %}
+                {{ form_row(form.userdata.submit) }}
+            {% endif %}
+
+            {% do form.userdata.setRendered %}
         </div>
-    {{ form_end(form) }}
-    #}
-{% endblock %}
+    </div>
+
+{{ form_end(form) }}

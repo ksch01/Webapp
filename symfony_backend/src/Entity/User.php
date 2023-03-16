@@ -47,6 +47,18 @@ class User
     #[ORM\JoinColumn(name:"usergroup", referencedColumnName:"name", nullable: false)]
     private ?UserGroup $usergroup = null;
 
+    public function setData(UserData $data, UserService $userService){
+        $cred = $data->getCredentials();
+        
+        $this->setEmail($cred->getEmail());
+        $this->setName($cred->getName());
+        $this->setZip($cred->getZip());
+        $this->setPlace($cred->getPlace());
+        $this->setPhone($cred->getPhone());
+        $this->setPassword($data->getPasswordString());
+        $this->setUsergroup($userService->getUsergroup($data->getUsergroupString()));
+    }
+
     public function getEmail(): ?string
     {
         return $this->email;

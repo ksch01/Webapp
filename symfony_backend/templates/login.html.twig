@@ -1,0 +1,13 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+    {% if not (error is same as false) %}
+        <div class='alert alert-danger'>
+                {{ error }}
+        </div>
+    {% endif %}
+    {{ form(form) }}
+    <div>
+        You do not have an account yet? Click <a href='/signup'>here</a> to sign up.
+    </div>
+{% endblock %}

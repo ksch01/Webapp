@@ -79,7 +79,7 @@ class LoginController extends AbstractController{
             }
         }
 
-        return $this->render('form.html.twig', [
+        return $this->render('login.html.twig', [
             'form' => $form,
             'error' => $error,
             'pageTitle' => "Login"

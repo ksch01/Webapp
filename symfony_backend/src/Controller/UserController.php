@@ -117,8 +117,8 @@ class UserController extends AbstractController{
             $session->set('place', $user->getPlace());
             $session->set('phone', $user->getPhone());
             $session->set('group', $user->getUsergroup()->getName());
-            
-            return $this->render('userform.html.twig', [
+
+            return $this->render('user.html.twig', [
                 'pageTitle' => "Users",
                 'menuPoints' => $this->menuPoints,
                 'currentPoint' => '/user/view',
@@ -128,7 +128,7 @@ class UserController extends AbstractController{
             ]);
         }
 
-        return $this->render('userform.html.twig', [
+        return $this->render('user.html.twig', [
             'pageTitle' => "Users",
             'menuPoints' => $this->menuPoints,
             'currentPoint' => '/user/view',
@@ -145,14 +145,20 @@ class UserController extends AbstractController{
         $email = $session->get('email');
         if($email === null)
             return $this->redirectToRoute('api_login_form');
-        $invokerPrivileges = $this->service->getUserPrivileges($email);
+
+        $targetemail = $request->query->get('targetemail');
+        if($targetemail == null)throw new BadRequestHttpException('edit user requests require the targetemail query parameter to be set');
+        
+        if($targetemail == $email){
+            $invokerPrivileges = $this->service->getUserPrivileges($email, true);
+        }else{
+            $invokerPrivileges = $this->service->getUserPrivileges($email, false);
+        }
         if($invokerPrivileges == null){
             $session->clear();
             return $this->redirectToRoute('api_login_form');
         }
-
-        $targetemail = $request->query->get('targetemail');
-        if($targetemail == null)throw new BadRequestHttpException('edit user requests require the targetemail query parameter to be set');
+        
         $target = $this->service->getUser($targetemail);
         if($target == null)throw new NotFoundHttpException('target user for edit user request not found');
 
@@ -178,7 +184,7 @@ class UserController extends AbstractController{
             else 
                 $error = 'An error occured. Please try again later.';
             
-            return $this->render('userform.html.twig', [
+            return $this->render('user.html.twig', [
                 'pageTitle' => "Users",
                 'menuPoints' => $this->menuPoints,
                 'currentPoint' => '/user/view',
@@ -188,7 +194,7 @@ class UserController extends AbstractController{
             ]);
         }
 
-        return $this->render('userform.html.twig', [
+        return $this->render('user.html.twig', [
             'pageTitle' => "Users",
             'menuPoints' => $this->menuPoints,
             'currentPoint' => '/user/list',
@@ -198,7 +204,48 @@ class UserController extends AbstractController{
         ]);
     }
 
-    private function getUserForm($invokerPrivileges, $email = "", $name = "", $zip = "", $place = "", $phone = "", $group = ""){
+    #[Route('/signup', name:'api_user_signup', methods:['GET', 'POST'])]
+    public function userSignup(MailerInterface $mailer, Request $request) : Response {
+        
+        $formData = $this->getUserForm();
+
+        $form = $formData['form'];
+        $userData = $formData['data'];
+
+        $error = false;
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            try{
+                $user = new User();
+                $user->setData($userData, $this->service);
+
+                $this->service-signupUser($user, $mailer);
+
+                return $this->render('info.html.twig', [
+                    'pageTitle' => "Signup",
+                    'info' => "Your account was successfully created. In order to activate your account use the link we provided in your email."
+                ]);
+            }catch(Exception $e){
+                $error = 'An error occured. Please try again later.';
+            }
+        }
+
+        return $this->render('signup.html.twig', [
+            'pageTitle' => "Signup",
+            'form' => $form,
+            'error' => $error
+        ]);
+    }
+
+    private function getUserForm($invokerPrivileges = null, $email = "", $name = "", $zip = "", $place = "", $phone = "", $group = ""){
+
+
+        if($invokerPrivileges == null){
+            $signupMode = true;
+        }else{
+            $signupMode = false;
+        }
 
         $userData = new UserData();
 
@@ -217,7 +264,7 @@ class UserController extends AbstractController{
         $userData->setUsergroup($userPrivileges);
 
         $form = $this->createFormBuilder($userData)
-            ->add('userdata', UserEditType::class, ['privileges' => $invokerPrivileges])
+            ->add('userdata', UserEditType::class, ['privileges' => $invokerPrivileges, 'signup' => $signupMode])
             ->getForm()
         ;
 

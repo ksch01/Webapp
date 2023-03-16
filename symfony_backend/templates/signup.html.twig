@@ -6,5 +6,8 @@
                 {{ error }}
         </div>
     {% endif %}
-    {{ form(form) }}
+    {{ include('userform.html.twig') }}
+    <div>
+        You already have an account. Click <a href='loginfromform'>here</a> to get to the login instead.
+    </div>
 {% endblock %}

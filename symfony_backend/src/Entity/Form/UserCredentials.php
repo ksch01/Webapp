@@ -43,7 +43,7 @@ class UserCredentials
     }
 
     public function getZip() : int{
-        return $this->zip;
+        return intval($this->zip);
     }
 
     public function setZip(string $zip){
