@@ -150,10 +150,8 @@ class UserService{
 
     public function updateUserWithData($session, $targetemail, UserData $user, ValidatorInterface $validator){
         $credentials = $user->getCredentials();
-        $password = $user->getPassword();
-        $group = $user->getGroup();
 
-        return $updateUser($session, $targetemail, $credentials->getEmail(), $credentials->getName(), $credentials->getZip(), $credentials->getPlace(), $credentials->getPhone(), $password->getPassword, $group->getGroup(), $validator);
+        return $this->updateUser($session, $targetemail, $credentials->getEmail(), $credentials->getName(), $credentials->getZip(), $credentials->getPlace(), $credentials->getPhone(), $user->getPasswordString(), $user->getUsergroupstring(), $validator);
     }
     public function updateUser($session, $targetemail, $email, $name, $zip, $place, $phone, $password, $group, ValidatorInterface $validator){
         
@@ -179,7 +177,7 @@ class UserService{
 
         if($email != null){
             if($target->getEmail() != $email){
-                if($repository->find($email) != false){
+                if($this->repo->find($email) != false){
                     return 'conflict';
                 }
                 $target->setEmail($email);
@@ -295,6 +293,10 @@ class UserService{
 
     public function getUser($email){
         return $this->repo->find($email);
+    }
+
+    public function getUserBySession($sessionKey){
+        return $this->repo->findOneBy(['session' => $sessionKey]);
     }
 
     public function getUsergroup($groupName){

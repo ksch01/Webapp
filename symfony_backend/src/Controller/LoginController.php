@@ -88,7 +88,12 @@ class LoginController extends AbstractController{
 
     #[Route('/logout', name: 'api_logout_form', methods: ['GET'])]
     public function logoutFromForm(Request $request) : Response{
-        $request->getSession()->clear();
+        $sessionKey = $request->getSession()->get('sessionKey');
+
+        if($sessionKey == null)
+            return $this->redirectToRoute('api_login_form');
+        
+        $this->service->endSession($sessionKey);
         return $this->redirectToRoute('api_login_form');
     }
 

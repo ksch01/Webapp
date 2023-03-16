@@ -11,8 +11,11 @@ use App\Entity\Form\UserPrivileges;
 class UserData
 {
 
+    #[Assert\Valid]
     protected UserCredentials $credentials;
+    #[Assert\Valid]
     protected UserPassword $password;
+    #[Assert\Valid]
     protected UserPrivileges $usergroup;
 
     public function setUserdata($userdata){
@@ -54,7 +57,7 @@ class UserData
     }
 
     public function getUsergroupString(){
-        return $this->usergroup->getGroupname();
+        return $this->usergroup->getGroup();
     }
 }
 

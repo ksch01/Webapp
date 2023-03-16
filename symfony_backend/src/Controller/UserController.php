@@ -110,6 +110,14 @@ class UserController extends AbstractController{
             else 
                 $error = 'An error occured. Please try again later.';
             
+            $user = $this->service->getUserBySession($session->get('sessionKey'));
+            $session->set('email', $user->getEmail());
+            $session->set('name', $user->getName());
+            $session->set('zip', $user->getZip());
+            $session->set('place', $user->getPlace());
+            $session->set('phone', $user->getPhone());
+            $session->set('group', $user->getUsergroup()->getName());
+            
             return $this->render('userform.html.twig', [
                 'pageTitle' => "Users",
                 'menuPoints' => $this->menuPoints,
