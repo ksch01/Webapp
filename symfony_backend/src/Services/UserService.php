@@ -128,12 +128,14 @@ class UserService{
         return $user;
     }
 
-    public function signupUser($user, MailerInterface $mailer){
+    public function signupUser($user, MailerInterface $mailer, bool $altLink = false){
 
         $activateKey = $this->generateSessionKey();
         $user->setSession($activateKey);
 
-        $link = $this->router->generate('api_user_varify', ['key' => $activateKey], UrlGeneratorInterface::ABSOLUTE_URL);
+        $query = ['key' => $activateKey];
+        if($altLink)$query['alt'] = true;
+        $link = $this->router->generate('api_user_varify', $query, UrlGeneratorInterface::ABSOLUTE_URL);
 
         $email = (new Email())
             ->from('ks0122021@gmail.com')

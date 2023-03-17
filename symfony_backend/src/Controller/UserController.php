@@ -225,7 +225,7 @@ class UserController extends AbstractController{
                 $user->setData($userData, $this->service);
 
                 try{
-                    $this->service->signupUser($user, $mailer);
+                    $this->service->signupUser($user, $mailer, true);
                 }catch(Exception $e){
                     $error = "An error occured. Please try again later.";
                 }
@@ -233,7 +233,7 @@ class UserController extends AbstractController{
                 if(!$error){
                     return $this->render('info.html.twig', [
                         'pageTitle' => "Signup",
-                        'info' => "Your account was successfully created. In order to activate your account use the link we provided in your email."
+                        'info' => "Your account has successfully been created. In order to activate your account use the link we provided in your email."
                     ]);
                 }
             }else{
@@ -285,6 +285,32 @@ class UserController extends AbstractController{
             'form' => $form,
             'data' => $userData
         ];
+    }
+
+    #[Route('/user/activated', name:'api_user_activated', methods:['GET'])]
+    public function infoActivated(UrlGeneratorInterface $router) : Response {
+        $link = $router->generate('api_login_form');
+        $linkText = "To get to the login page click ";
+
+        return $this->render('info.html.twig', [
+            'pageTitle' => 'Activated',
+            'info' => 'Your account has succesfully been activated.',
+            'link' => $link,
+            'linkText' => $linkText
+        ]);
+    }
+
+    #[Route('/user/invalid', name:'api_user_activated_invalid', methods:['GET'])]
+    public function infoInvalidActivation(UrlGeneratorInterface $router) : Response {
+        $link = $router->generate('api_login_form');
+        $linkText = "To get to the login page click ";
+
+        return $this->render('info.html.twig', [
+            'pageTitle' => 'Invalid',
+            'info' => 'This link is invalid. If your account has not yet been activated please contact an administrator.',
+            'link' => $link,
+            'linkText' => $linkText
+        ]);
     }
 
     #[Route('/user/list', name:'api_user_list', methods:['GET'])]
@@ -450,10 +476,14 @@ class UserController extends AbstractController{
             throw new BadRequestHttpException('varify requests require the key query parameter to be set');
         }
 
-        if($this->service->validateUser($activateKey)){
-            return $this->redirect($this->getAbsoluteFrontendAddress('/#/activated'));
+        $validated = $this->service->validateUser($activateKey);
+
+        if($request->query->get('alt')){
+            if($validated) return $this->redirectToRoute('api_user_activated');
+            else return $this->redirectToRoute('api_user_activated_invalid');
         }else{
-            return $this->redirect($this->getAbsoluteFrontendAddress('/#/invalid'));
+            if($validated)return $this->redirect($this->getAbsoluteFrontendAddress('/#/activated'));
+            else return $this->redirect($this->getAbsoluteFrontendAddress('/#/invalid'));
         }
     }
 

@@ -2,4 +2,11 @@
 
 {% block body %}
     {{ info }}
+    {% if link is defined %}
+        <div>
+        {{ linkText }} 
+        <a href={{link}}>here</a>
+        .
+        </div>
+    {% endif %}
 {% endblock %}
