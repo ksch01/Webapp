@@ -5,9 +5,11 @@ namespace App\Entity\Form;
 use Symfony\Component\Validator\Constraints as Assert;
 
 class UserPassword{
+    #[Assert\NotBlank(groups: ['signup'])]
     #[Assert\Length(min: 8)]
     protected $password = '';
 
+    #[Assert\NotBlank(groups: ['signup'])]
     #[Assert\Expression('this.getRepeat() == this.getPassword()')]
     protected $repeat = '';
 

@@ -212,22 +212,32 @@ class UserController extends AbstractController{
         $form = $formData['form'];
         $userData = $formData['data'];
 
+        $form->handleRequest($request);
+
         $error = false;
 
         if($form->isSubmitted() && $form->isValid()){
 
-            try{
+            $agreed = $form->get('userdata')->get('agree')->getData();
+
+            if($agreed){
                 $user = new User();
                 $user->setData($userData, $this->service);
 
-                $this->service-signupUser($user, $mailer);
+                try{
+                    $this->service->signupUser($user, $mailer);
+                }catch(Exception $e){
+                    $error = "An error occured. Please try again later.";
+                }
 
-                return $this->render('info.html.twig', [
-                    'pageTitle' => "Signup",
-                    'info' => "Your account was successfully created. In order to activate your account use the link we provided in your email."
-                ]);
-            }catch(Exception $e){
-                $error = 'An error occured. Please try again later.';
+                if(!$error){
+                    return $this->render('info.html.twig', [
+                        'pageTitle' => "Signup",
+                        'info' => "Your account was successfully created. In order to activate your account use the link we provided in your email."
+                    ]);
+                }
+            }else{
+                $error = "In order to create an account you have to agree to the terms and privacy policy.";
             }
         }
 
@@ -239,7 +249,6 @@ class UserController extends AbstractController{
     }
 
     private function getUserForm($invokerPrivileges = null, $email = "", $name = "", $zip = "", $place = "", $phone = "", $group = ""){
-
 
         if($invokerPrivileges == null){
             $signupMode = true;
@@ -263,7 +272,11 @@ class UserController extends AbstractController{
         $userData->setPassword(new UserPassword());
         $userData->setUsergroup($userPrivileges);
 
-        $form = $this->createFormBuilder($userData)
+        $validationGroups = ['Default'];
+        if($signupMode)array_push($validationGroups, 'signup');
+        
+
+        $form = $this->createFormBuilder($userData, ['validation_groups' => $validationGroups])
             ->add('userdata', UserEditType::class, ['privileges' => $invokerPrivileges, 'signup' => $signupMode])
             ->getForm()
         ;

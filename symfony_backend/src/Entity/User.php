@@ -8,6 +8,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 use Doctrine\ORM\Mapping as ORM;
 
+use App\Entity\Form\UserData;
+use App\Services\UserService;
+
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User
 {

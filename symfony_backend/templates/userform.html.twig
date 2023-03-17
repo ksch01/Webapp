@@ -7,33 +7,27 @@
         <div class="col">
 
             {% if form.userdata.credentials.email is defined %}
-            {{ form_start(form.userdata.credentials) }}
-                <div class="border rounded px-2 mb-1 mt-n3">
-                    {{ form_label(form.userdata.credentials, "Credentials", {'label_attr' : {'class' : "border-bottom h2"}}) }}
-                    {{ form_row(form.userdata.credentials.email) }}
-                    {{ form_row(form.userdata.credentials.name) }}
-                    {{ form_row(form.userdata.credentials.zip) }}
-                    {{ form_row(form.userdata.credentials.place) }}
-                    {{ form_row(form.userdata.credentials.phone) }}
-                </div>
-            {{ form_end(form.userdata.credentials) }}
+            <div class="border rounded px-2 mb-1 mt-n3">
+                {{ form_label(form.userdata.credentials, "Credentials", {'label_attr' : {'class' : "border-bottom h2"}}) }}
+                {{ form_row(form.userdata.credentials.email) }}
+                {{ form_row(form.userdata.credentials.name) }}
+                {{ form_row(form.userdata.credentials.zip) }}
+                {{ form_row(form.userdata.credentials.place) }}
+                {{ form_row(form.userdata.credentials.phone) }}
+            </div>
             {% endif %}
 
             {% if form.userdata.password.password is defined %}
-            {{ form_start(form.userdata.password) }}
-                <div class="border rounded px-2 mb-1 mt-n3">
-                    {{ form_row(form.userdata.password.password) }}
-                    {{ form_row(form.userdata.password.repeat) }}
-                </div>
-            {{ form_end(form.userdata.password) }}
+            <div class="border rounded px-2 mb-1 mt-n3">
+                {{ form_row(form.userdata.password.password) }}
+                {{ form_row(form.userdata.password.repeat) }}
+            </div>
             {% endif %}
 
             {% if form.userdata.usergroup.group is defined %}
-            {{ form_start(form.userdata.usergroup) }}
-                <div class="border rounded px-2 mb-1 mt-n3">
-                    {{ form_row(form.userdata.usergroup.group) }}
-                </div>
-            {{ form_end(form.userdata.usergroup) }}
+            <div class="border rounded px-2 mb-1 mt-n3">
+                {{ form_row(form.userdata.usergroup.group) }}
+            </div>
             {% endif %}
 
             {% if form.userdata.agree is defined %}

@@ -6,11 +6,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class UserPrivileges{
 
-    public const GROUPS = ['pending', 'user', 'superuser', 'admin'];
+    public const GROUPS = ['pending', 'user', 'superuser', 'admin', ''];
     public const GROUPS_KV = ['pending' => 'pending', 'user' => 'user', 'superuser' => 'superuser', 'admin' => 'admin'];
 
-    #[Assert\NotBlank]
-    #[Assert\Choice(choices: UserPrivileges::GROUPS)]
+    #[Assert\Choice(choices: UserPrivileges::GROUPS, message: 'The value you selected ({{ value }}) is not a valid choice.')]
     protected $group;
 
     public function setGroup($group){
