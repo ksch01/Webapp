@@ -286,7 +286,7 @@ class UserService{
         $user->setUsergroup($usergroup);
         $user->setSession(null);
 
-        $repository->flush();
+        $this->repo->flush();
 
         return true;
     }

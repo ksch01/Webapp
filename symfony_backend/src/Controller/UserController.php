@@ -450,7 +450,7 @@ class UserController extends AbstractController{
             throw new BadRequestHttpException('varify requests require the key query parameter to be set');
         }
 
-        if($this->service->validateUser()){
+        if($this->service->validateUser($activateKey)){
             return $this->redirect($this->getAbsoluteFrontendAddress('/#/activated'));
         }else{
             return $this->redirect($this->getAbsoluteFrontendAddress('/#/invalid'));
