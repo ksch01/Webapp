@@ -370,7 +370,8 @@ class UserFormController extends AbstractController{
     public function userList(Request $request) : Response {
 
         $session = $request->getSession();
-        if($session->get('email') === null)
+        $email = $session->get('email');
+        if($email === null)
             return $this->redirectToRoute('api_login_form');
 
         $page = $request->query->get('page', 0);
@@ -387,6 +388,7 @@ class UserFormController extends AbstractController{
             'menuPoints' => $this->menuPoints,
             'currentPoint' => '/user/list',
             'users' => $users,
+            'currentEmail' => $email,
             'page' => $page,
             'sort' => $sort,
             'sasc' => $sdir,
