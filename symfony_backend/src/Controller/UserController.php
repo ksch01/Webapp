@@ -139,7 +139,7 @@ class UserController extends AbstractController{
     }
 
     #[Route('/user/edit', name:'api_user_edit', methods:['GET', 'POST'])]
-    public function userEdit(Request $request) : Response{
+    public function userEdit(Request $request, ValidatorInterface $validator, UrlGeneratorInterface $router) : Response{
 
         $session = $request->getSession();
         $email = $session->get('email');
@@ -167,6 +167,9 @@ class UserController extends AbstractController{
         $form = $formData['form'];
         $userData = $formData['data'];
 
+        if($invokerPrivileges)
+            $delete = $router->generate('api_user_deleteform_confirm', ['target' => $targetemail]);
+
         $form->handleRequest($request);
         $error = false;
         $success = false;
@@ -189,6 +192,7 @@ class UserController extends AbstractController{
                 'menuPoints' => $this->menuPoints,
                 'currentPoint' => '/user/view',
                 'form' => $form,
+                'delete' => $delete,
                 'error' => $error,
                 'success' => $success
             ]);
@@ -199,6 +203,7 @@ class UserController extends AbstractController{
             'menuPoints' => $this->menuPoints,
             'currentPoint' => '/user/list',
             'form' => $form,
+            'delete' => $delete,
             'error' => $error,
             'success' => $success
         ]);
@@ -310,6 +315,55 @@ class UserController extends AbstractController{
             'info' => 'This link is invalid. If your account has not yet been activated please contact an administrator.',
             'link' => $link,
             'linkText' => $linkText
+        ]);
+    }
+
+    #[Route('/user/delete-confirm', name:'api_user_deleteform_confirm', methods:['GET'])]
+    public function getDeleteFormConfirm(UrlGeneratorInterface $router, Request $request) : Response {
+        return $this->render('confirm.html.twig', [
+            'pageTitle' => 'Users',
+            'menuPoints' => $this->menuPoints,
+            'currentPoint' => '/user/list',
+            'query' => "Are you sure you want to delete the account with email \"" . $request->query->get('target') . "\"?",
+            'onConfirm' => $router->generate('api_user_deleteform', ['target' => $request->query->get('target')])
+        ]);
+    }
+
+    #[Route('/user/delete', name:'api_user_deleteform', methods:['GET'])]
+    public function deleteForm(Request $request){
+        $session = $request->getSession();
+        $sessionKey = $session->get('sessionKey');
+        if($sessionKey === null)
+            return $this->redirectToRoute('api_login_form');
+            
+        $error = false;
+        
+        $targetemail = $request->query->get('target');
+        if($targetemail == null){
+            $error = "User does not exist.";
+        }else{
+            $status = $this->service->deleteUser($sessionKey, $targetemail);
+        }
+
+        if($status === 'missing privileges')
+            $error = "Insufficient permissions.";
+        else if($status === 'not found')
+            $error = "Delete user target did not exist.";
+
+        if(!$error){
+            return $this->render('maininfo.html.twig', [
+                'pageTitle' => 'Users',
+                'menuPoints' => $this->menuPoints,
+                'currentPoint' => '/user/list',
+                'info' => "User has been successfully deleted."
+            ]);
+        }
+
+        return $this->render('error.html.twig', [
+            'pageTitle' => 'Users',
+            'menuPoints' => $this->menuPoints,
+            'currentPoint' => '/user/list',
+            'error' => $error
         ]);
     }
 

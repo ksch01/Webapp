@@ -35,7 +35,12 @@
             {% endif %}
 
             {% if form.userdata.submit is defined %}
-                {{ form_row(form.userdata.submit) }}
+                <div class="d-flex w-100 justify-content-around" role="group">
+                    {{ form_widget(form.userdata.submit) }}
+                    {% if delete is defined%}
+                        <a class="btn-danger btn" role="button" href={{ delete }}>Delete</a>
+                    {% endif %}
+                </div>
             {% endif %}
 
             {% do form.userdata.setRendered %}

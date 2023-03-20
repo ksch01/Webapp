@@ -253,13 +253,15 @@ class UserService{
             return [
                 'edit_cred' => $user->getUsergroup()->isEditOwnCred(),
                 'edit_pass' => $user->getUsergroup()->isEditOwnPass(),
-                'edit_priv' => $user->getUsergroup()->isEditOwnPriv()
+                'edit_priv' => $user->getUsergroup()->isEditOwnPriv(),
+                'priv_delete' => $user->getUsergroup()->isPrivDelete()
             ];
         }else{
             return [
                 'edit_cred' => $user->getUsergroup()->isEditOthCred(),
                 'edit_pass' => $user->getUsergroup()->isEditOthPass(),
-                'edit_priv' => $user->getUsergroup()->isEditOthPriv()
+                'edit_priv' => $user->getUsergroup()->isEditOthPriv(),
+                'priv_delete' => $user->getUsergroup()->isPrivDelete()
             ];
         }
     }
