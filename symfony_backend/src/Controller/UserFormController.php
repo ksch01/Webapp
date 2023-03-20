@@ -149,7 +149,7 @@ class UserFormController extends AbstractController{
         if($targetemail == null)throw new BadRequestHttpException('edit user requests require the targetemail query parameter to be set');
         
         if($targetemail == $email){
-            $invokerPrivileges = $this->service->getUserPrivileges($email, true);
+            return $this->redirectToRoute('api_user_view');
         }else{
             $invokerPrivileges = $this->service->getUserPrivileges($email, false);
         }
