@@ -1,49 +1,50 @@
 {{ form_start(form, {'attr': {'style' : "width: 16em"}}) }}
 
     {{ form_row(form._token) }}
-    {{ form_errors(form) }}
     
     <div class="row">
         <div class="col">
 
-            {% if form.userdata.credentials.email is defined %}
+            {% if form.credentials.email is defined %}
             <div class="border rounded px-2 mb-1 mt-n3">
-                {{ form_label(form.userdata.credentials, "Credentials", {'label_attr' : {'class' : "border-bottom h2"}}) }}
-                {{ form_row(form.userdata.credentials.email) }}
-                {{ form_row(form.userdata.credentials.name) }}
-                {{ form_row(form.userdata.credentials.zip) }}
-                {{ form_row(form.userdata.credentials.place) }}
-                {{ form_row(form.userdata.credentials.phone) }}
+                {{ form_label(form.credentials, "Credentials", {'label_attr' : {'class' : "border-bottom h2"}}) }}
+                {{ form_row(form.credentials.email) }}
+                {{ form_row(form.credentials.name) }}
+                {{ form_row(form.credentials.zip) }}
+                {{ form_row(form.credentials.place) }}
+                {{ form_row(form.credentials.phone) }}
             </div>
             {% endif %}
 
-            {% if form.userdata.password.password is defined %}
+            {% if form.password.password is defined %}
             <div class="border rounded px-2 mb-1 mt-n3">
-                {{ form_row(form.userdata.password.password) }}
-                {{ form_row(form.userdata.password.repeat) }}
+                {{ form_row(form.password.password) }}
+                {{ form_row(form.password.repeat) }}
             </div>
+            {% else %}
+                {% do form.password.setRendered %}
             {% endif %}
 
-            {% if form.userdata.usergroup.group is defined %}
+            {% if form.usergroup.group is defined %}
             <div class="border rounded px-2 mb-1 mt-n3">
-                {{ form_row(form.userdata.usergroup.group) }}
+                {{ form_row(form.usergroup.group) }}
             </div>
+            {% else %}
+                {% do form.usergroup.setRendered %}
             {% endif %}
 
-            {% if form.userdata.agree is defined %}
-                {{ form_row(form.userdata.agree) }}
+            {% if form.agree is defined %}
+                {{ form_row(form.agree) }}
             {% endif %}
 
-            {% if form.userdata.submit is defined %}
+            {% if form.submit is defined %}
                 <div class="d-flex w-100 justify-content-around" role="group">
-                    {{ form_widget(form.userdata.submit) }}
+                    {{ form_widget(form.submit) }}
                     {% if delete is defined%}
                         <a class="btn-danger btn" role="button" href={{ delete }}>Delete</a>
                     {% endif %}
                 </div>
             {% endif %}
-
-            {% do form.userdata.setRendered %}
         </div>
     </div>
 

@@ -285,6 +285,8 @@ class UserFormController extends AbstractController{
             ->getForm()
         ;
 
+        $form = $this->createForm(UserEditType::class, $userData, ['privileges' => $invokerPrivileges, 'signup' => $signupMode]);
+
         return [
             'form' => $form,
             'data' => $userData
